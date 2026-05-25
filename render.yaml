@@ -1,0 +1,10 @@
+services:
+  - type: static_site
+    name: star50-web
+    buildCommand: ""
+    staticPublishPath: .
+    pullRequestPreviewsEnabled: true
+    headers:
+      - path: /data/*
+        name: Cache-Control
+        value: public, max-age=300

@@ -1,0 +1,755 @@
+
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>公司财务与行情数据 UI</title>
+  <style>
+    :root {
+      --bg: #FAFAFA;
+      --fg: #111111;
+      --accent: #2F6FEB;
+      --muted: #6B6B6B;
+      --border: #E5E5E5;
+      --surface: #FFFFFF;
+      --success: #17A34A;
+      --warn: #EAB308;
+      --danger: #DC2626;
+
+      --font-display: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-mono: ui-monospace, 'JetBrains Mono', monospace;
+
+      --radius-card: 12px;
+      --radius-control: 8px;
+      --max: 1200px;
+      --gutter: 24px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-body);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: color-mix(in srgb, var(--bg) 94%, transparent);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .topbar-inner {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 16px var(--gutter);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--accent);
+      display: grid;
+      place-items: center;
+      color: #FFFFFF;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      flex: 0 0 auto;
+    }
+
+    .brand-title {
+      min-width: 0;
+    }
+
+    .brand-title h1 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 20px;
+      line-height: 1.2;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand-title p {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .nav {
+      display: flex;
+      gap: 6px;
+      padding: 4px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+    }
+
+    .nav button {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 160ms ease, color 160ms ease;
+      white-space: nowrap;
+    }
+
+    .nav button:hover {
+      color: var(--fg);
+      background: var(--bg);
+    }
+
+    .nav button[aria-selected="true"] {
+      background: var(--accent);
+      color: #FFFFFF;
+    }
+
+    main {
+      max-width: var(--max);
+      width: 100%;
+      margin: 0 auto;
+      padding: 32px var(--gutter) 80px;
+    }
+
+    .page {
+      display: none;
+      animation: appear 180ms ease both;
+    }
+
+    .page.is-active {
+      display: block;
+    }
+
+    @keyframes appear {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .page-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .eyebrow {
+      margin: 0;
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.02em;
+    }
+
+    .page-head h2 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 32px;
+      line-height: 1.2;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .page-head p {
+      margin: 0;
+      max-width: 720px;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 20px;
+    }
+
+    .card.span-4 {
+      grid-column: span 4;
+    }
+
+    .card.span-12 {
+      grid-column: span 12;
+    }
+
+    .field-card {
+      min-height: 144px;
+      display: grid;
+      align-content: space-between;
+      gap: 20px;
+    }
+
+    .field-label {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .field-value {
+      margin: 0;
+      color: var(--fg);
+      font-family: var(--font-display);
+      font-size: 24px;
+      line-height: 1.2;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      word-break: break-word;
+    }
+
+    .value-code {
+      font-family: var(--font-mono);
+      font-size: 20px;
+      letter-spacing: 0;
+    }
+
+    .statement-stack {
+      display: grid;
+      gap: 24px;
+    }
+
+    .statement {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      overflow: hidden;
+    }
+
+    .statement-title {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .statement-title h3 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 20px;
+      line-height: 1.2;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      min-width: 560px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: middle;
+      font-size: 14px;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 400;
+      background: var(--bg);
+    }
+
+    td:first-child {
+      color: var(--fg);
+      font-weight: 500;
+    }
+
+    td:last-child {
+      color: var(--fg);
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .market-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .market-item {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      background: var(--surface);
+      min-height: 104px;
+      display: grid;
+      align-content: space-between;
+      gap: 14px;
+    }
+
+    .market-label {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .market-value {
+      margin: 0;
+      color: var(--fg);
+      font-family: var(--font-mono);
+      font-size: 20px;
+      line-height: 1.2;
+      font-variant-numeric: tabular-nums;
+      word-break: break-word;
+    }
+
+    .placeholder {
+      color: var(--muted);
+    }
+
+    .screen-note {
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 1023px) {
+      :root {
+        --gutter: 16px;
+      }
+
+      .topbar-inner {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+
+      .nav {
+        width: 100%;
+        overflow-x: auto;
+      }
+
+      main {
+        padding-top: 28px;
+      }
+
+      .grid {
+        grid-template-columns: repeat(8, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .card.span-4 {
+        grid-column: span 8;
+      }
+
+      .card.span-12 {
+        grid-column: span 8;
+      }
+
+      .market-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 639px) {
+      :root {
+        --gutter: 12px;
+      }
+
+      .topbar-inner {
+        padding: 12px var(--gutter);
+      }
+
+      .brand-mark {
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+        font-size: 14px;
+      }
+
+      .brand-title h1 {
+        font-size: 16px;
+      }
+
+      .brand-title p {
+        display: none;
+      }
+
+      .nav button {
+        padding: 8px 10px;
+        font-size: 13px;
+      }
+
+      main {
+        padding: 24px var(--gutter) 56px;
+      }
+
+      .page-head {
+        margin-bottom: 18px;
+      }
+
+      .page-head h2 {
+        font-size: 24px;
+      }
+
+      .page-head p {
+        font-size: 14px;
+      }
+
+      .grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .card,
+      .card.span-4,
+      .card.span-12 {
+        grid-column: span 4;
+      }
+
+      .card {
+        padding: 16px;
+      }
+
+      .field-card {
+        min-height: 116px;
+      }
+
+      .field-value {
+        font-size: 20px;
+      }
+
+      .value-code {
+        font-size: 18px;
+      }
+
+      .statement-stack {
+        gap: 16px;
+      }
+
+      .statement-title {
+        padding: 16px;
+      }
+
+      .statement-title h3 {
+        font-size: 18px;
+      }
+
+      th,
+      td {
+        padding: 12px 16px;
+      }
+
+      .market-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .market-item {
+        min-height: 92px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand" aria-label="页面标题">
+          <div class="brand-mark">财</div>
+          <div class="brand-title">
+            <h1>公司财务与行情数据</h1>
+            <p>公司基本信息 · 三大财务报表 · 当天行情</p>
+          </div>
+        </div>
+
+        <nav class="nav" aria-label="页面导航">
+          <button type="button" data-page-target="overview" aria-selected="true">公司基本信息</button>
+          <button type="button" data-page-target="financials" aria-selected="false">三大财务报表</button>
+          <button type="button" data-page-target="market" aria-selected="false">行情数据</button>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="page is-active" id="overview" data-page="overview" aria-labelledby="overview-title">
+        <div class="page-head">
+          <p class="eyebrow">SECTION 01</p>
+          <h2 id="overview-title">公司基本信息</h2>
+          <p>用于承载公司名称与代码、主营业务构成、所属行业与细分赛道。</p>
+        </div>
+
+        <div class="grid">
+          <article class="card field-card span-4">
+            <p class="field-label">公司名称与代码</p>
+            <p class="field-value value-code placeholder">—</p>
+          </article>
+
+          <article class="card field-card span-4">
+            <p class="field-label">主营业务构成</p>
+            <p class="field-value placeholder">—</p>
+          </article>
+
+          <article class="card field-card span-4">
+            <p class="field-label">所属行业与细分赛道</p>
+            <p class="field-value placeholder">—</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="page" id="financials" data-page="financials" aria-labelledby="financials-title">
+        <div class="page-head">
+          <p class="eyebrow">SECTION 02</p>
+          <h2 id="financials-title">三大财务报表</h2>
+          <p>包含资产负债表、利润表、现金流量表。</p>
+        </div>
+
+        <div class="statement-stack">
+          <section class="statement" aria-labelledby="balance-title">
+            <div class="statement-title">
+              <h3 id="balance-title">资产负债表</h3>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">项目</th>
+                    <th scope="col">数值</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>货币资金</td><td class="placeholder">—</td></tr>
+                  <tr><td>应收账款</td><td class="placeholder">—</td></tr>
+                  <tr><td>存货</td><td class="placeholder">—</td></tr>
+                  <tr><td>固定资产</td><td class="placeholder">—</td></tr>
+                  <tr><td>商誉</td><td class="placeholder">—</td></tr>
+                  <tr><td>短期借款</td><td class="placeholder">—</td></tr>
+                  <tr><td>长期借款</td><td class="placeholder">—</td></tr>
+                  <tr><td>实收资本</td><td class="placeholder">—</td></tr>
+                  <tr><td>资本公积</td><td class="placeholder">—</td></tr>
+                  <tr><td>未分配利润</td><td class="placeholder">—</td></tr>
+                  <tr><td>资产总计</td><td class="placeholder">—</td></tr>
+                  <tr><td>负债合计</td><td class="placeholder">—</td></tr>
+                  <tr><td>所有者权益合计</td><td class="placeholder">—</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="statement" aria-labelledby="income-title">
+            <div class="statement-title">
+              <h3 id="income-title">利润表</h3>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">项目</th>
+                    <th scope="col">数值</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>营业收入</td><td class="placeholder">—</td></tr>
+                  <tr><td>营业成本</td><td class="placeholder">—</td></tr>
+                  <tr><td>销售费用</td><td class="placeholder">—</td></tr>
+                  <tr><td>管理费用</td><td class="placeholder">—</td></tr>
+                  <tr><td>财务费用</td><td class="placeholder">—</td></tr>
+                  <tr><td>投资收益</td><td class="placeholder">—</td></tr>
+                  <tr><td>营业利润</td><td class="placeholder">—</td></tr>
+                  <tr><td>利润总额</td><td class="placeholder">—</td></tr>
+                  <tr><td>净利润</td><td class="placeholder">—</td></tr>
+                  <tr><td>归母净利润</td><td class="placeholder">—</td></tr>
+                  <tr><td>扣非净利润</td><td class="placeholder">—</td></tr>
+                  <tr><td>基本每股收益</td><td class="placeholder">—</td></tr>
+                  <tr><td>稀释每股收益</td><td class="placeholder">—</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="statement" aria-labelledby="cash-title">
+            <div class="statement-title">
+              <h3 id="cash-title">现金流量表</h3>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">项目</th>
+                    <th scope="col">数值</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>销售商品收到的现金</td><td class="placeholder">—</td></tr>
+                  <tr><td>购买商品支付的现金</td><td class="placeholder">—</td></tr>
+                  <tr><td>经营现金流净额</td><td class="placeholder">—</td></tr>
+                  <tr><td>投资现金流净额</td><td class="placeholder">—</td></tr>
+                  <tr><td>筹资现金流净额</td><td class="placeholder">—</td></tr>
+                  <tr><td>期末现金余额</td><td class="placeholder">—</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="page" id="market" data-page="market" aria-labelledby="market-title">
+        <div class="page-head">
+          <p class="eyebrow">SECTION 03</p>
+          <h2 id="market-title">行情数据</h2>
+          <p>展示当天行情数据，不进行实时更新。</p>
+        </div>
+
+        <div class="market-grid" aria-label="当天行情">
+          <article class="market-item">
+            <p class="market-label">日期</p>
+            <p class="market-value placeholder">—</p>
+          </article>
+
+          <article class="market-item">
+            <p class="market-label">开盘价</p>
+            <p class="market-value placeholder">—</p>
+          </article>
+
+          <article class="market-item">
+            <p class="market-label">最高价</p>
+            <p class="market-value placeholder">—</p>
+          </article>
+
+          <article class="market-item">
+            <p class="market-label">最低价</p>
+            <p class="market-value placeholder">—</p>
+          </article>
+
+          <article class="market-item">
+            <p class="market-label">收盘价</p>
+            <p class="market-value placeholder">—</p>
+          </article>
+
+          <article class="market-item">
+            <p class="market-label">成交量</p>
+            <p class="market-value placeholder">—</p>
+          </article>
+
+          <article class="market-item">
+            <p class="market-label">成交额</p>
+            <p class="market-value placeholder">—</p>
+          </article>
+
+          <article class="market-item">
+            <p class="market-label">流动股本</p>
+            <p class="market-value placeholder">—</p>
+          </article>
+
+          <article class="market-item">
+            <p class="market-label">换手率</p>
+            <p class="market-value placeholder">—</p>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (() => {
+      const navButtons = Array.from(document.querySelectorAll('[data-page-target]'));
+      const pages = Array.from(document.querySelectorAll('[data-page]'));
+      const storageKey = 'financial-market-ui-active-page';
+
+      function setPage(pageId) {
+        const exists = pages.some((page) => page.dataset.page === pageId);
+        const targetId = exists ? pageId : 'overview';
+
+        pages.forEach((page) => {
+          page.classList.toggle('is-active', page.dataset.page === targetId);
+        });
+
+        navButtons.forEach((button) => {
+          button.setAttribute('aria-selected', String(button.dataset.pageTarget === targetId));
+        });
+
+        try {
+          localStorage.setItem(storageKey, targetId);
+        } catch (error) {
+          return;
+        }
+      }
+
+      navButtons.forEach((button) => {
+        button.addEventListener('click', () => setPage(button.dataset.pageTarget));
+      });
+
+      let savedPage = 'overview';
+      try {
+        savedPage = localStorage.getItem(storageKey) || 'overview';
+      } catch (error) {
+        savedPage = 'overview';
+      }
+
+      setPage(savedPage);
+    })();
+  </script>
+</body>
+</html>
