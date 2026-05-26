@@ -222,6 +222,38 @@ def get_financials(code):
     return result
 
 
+
+def get_recent_news(code, name, limit=5):
+    fallback = [{
+        "标题": f"搜索{name}相关新闻",
+        "链接": f"https://so.eastmoney.com/news/s?keyword={code}",
+        "时间": None,
+        "来源": "东方财富搜索",
+        "摘要": None,
+    }]
+    try:
+        df = retry_call(lambda: ak.stock_news_em(symbol=code), tries=3, sleep_seconds=1.5)
+    except Exception:
+        return fallback
+    if df is None or df.empty:
+        return fallback
+    if "发布时间" in df.columns:
+        df = df.sort_values("发布时间", ascending=False)
+    news = []
+    for _, row in df.head(limit).iterrows():
+        title = clean_value(row.get("新闻标题"))
+        url = clean_value(row.get("新闻链接"))
+        if not title or not url:
+            continue
+        news.append({
+            "标题": title,
+            "链接": url,
+            "时间": clean_value(row.get("发布时间")),
+            "来源": clean_value(row.get("文章来源")),
+            "摘要": clean_value(row.get("新闻内容")),
+        })
+    return news or fallback
+
 def get_market(code, days_back=14):
     end = date.today()
     start = end - timedelta(days=days_back)
@@ -432,6 +464,18 @@ def fetch(limit=None, sleep_seconds=1.0):
         except Exception as exc:
             errors.append({"code": code, "stage": "market", "error": str(exc)})
             item["market"] = {k: None for k in MARKET_FIELDS}
+        time.sleep(sleep_seconds)
+        try:
+            item["news"] = get_recent_news(code, item.get("company", {}).get("公司名称") or name)
+        except Exception as exc:
+            errors.append({"code": code, "stage": "news", "error": str(exc)})
+            item["news"] = [{
+                "标题": f"搜索{name}相关新闻",
+                "链接": f"https://so.eastmoney.com/news/s?keyword={code}",
+                "时间": None,
+                "来源": "东方财富搜索",
+                "摘要": None,
+            }]
         item["trend"] = build_trend_reference(item)
         stocks.append(item)
         time.sleep(sleep_seconds)
