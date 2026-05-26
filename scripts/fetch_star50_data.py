@@ -124,6 +124,41 @@ def parse_industry(value):
     return str(value)
 
 
+
+SECTOR_RULES = [
+    ("半导体", ["半导体", "芯片", "集成电路", "处理器", "晶圆", "封装", "刻蚀", "薄膜", "光刻", "存储", "射频"]),
+    ("软件与信息服务", ["软件", "WPS", "办公", "云服务", "信息安全", "操作系统", "数据库", "人工智能", "算法"]),
+    ("高端装备", ["设备", "装备", "机器人", "自动化", "机床", "激光", "测量", "检测"]),
+    ("生物医药", ["医药", "医疗", "诊断", "试剂", "疫苗", "抗体", "药品", "制药", "手术"]),
+    ("新能源与新材料", ["新能源", "电池", "锂", "光伏", "储能", "材料", "合金", "稀土", "碳纤维"]),
+    ("轨交与基础设施", ["铁路", "轨道", "城市轨道", "交通", "信号", "工程总承包"]),
+    ("航空航天与军工电子", ["航空", "航天", "卫星", "雷达", "军工", "电子元器件"]),
+]
+
+
+def infer_industry_track(industry, business):
+    source = "；".join([str(x) for x in [industry, business] if x])
+    if not source:
+        return None
+    sectors = []
+    tracks = []
+    for sector, keywords in SECTOR_RULES:
+        matched = [kw for kw in keywords if kw in source]
+        if matched:
+            sectors.append(sector)
+            tracks.extend(matched[:3])
+    if not sectors and industry:
+        sectors.append(str(industry))
+    if not sectors:
+        sectors.append("科创板成长行业")
+    seen_tracks = []
+    for item in tracks:
+        if item not in seen_tracks:
+            seen_tracks.append(item)
+    if seen_tracks:
+        return f"{sectors[0]} | 细分赛道：{'、'.join(seen_tracks[:5])}"
+    return f"{sectors[0]} | 细分赛道：待补充"
+
 def retry_call(func, tries=3, sleep_seconds=1.0):
     last_exc = None
     for attempt in range(tries):
@@ -192,8 +227,9 @@ def get_company_info(code, fallback_name):
 
     if not data.get("主营业务构成"):
         data["主营业务构成"] = summarize_business_segments(code)
-    if not data.get("所属行业与细分赛道") and data.get("主营业务构成"):
-        data["所属行业与细分赛道"] = data["主营业务构成"]
+    inferred_track = infer_industry_track(data.get("所属行业与细分赛道"), data.get("主营业务构成"))
+    if inferred_track:
+        data["所属行业与细分赛道"] = inferred_track
     return data
 
 
