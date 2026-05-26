@@ -124,6 +124,46 @@ def parse_industry(value):
     return str(value)
 
 
+def retry_call(func, tries=3, sleep_seconds=1.0):
+    last_exc = None
+    for attempt in range(tries):
+        try:
+            return func()
+        except Exception as exc:
+            last_exc = exc
+            if attempt < tries - 1:
+                time.sleep(sleep_seconds * (attempt + 1))
+    raise last_exc
+
+
+def summarize_business_segments(code):
+    df = retry_call(lambda: ak.stock_zygc_em(symbol=f"SH{code}"), tries=3, sleep_seconds=1.5)
+    if df is None or df.empty:
+        return None
+    latest_date = str(df["报告日期"].max()) if "报告日期" in df.columns else None
+    work = df[df["报告日期"].astype(str) == latest_date].copy() if latest_date else df.copy()
+    if "分类类型" in work.columns:
+        product = work[work["分类类型"].astype(str).str.contains("产品", na=False)]
+        if not product.empty:
+            work = product
+    if "收入比例" in work.columns:
+        work = work.sort_values("收入比例", ascending=False)
+    parts = []
+    for _, row in work.head(5).iterrows():
+        name = clean_value(row.get("主营构成"))
+        ratio = clean_value(row.get("收入比例"))
+        if not name:
+            continue
+        if isinstance(ratio, (int, float)) and not math.isnan(ratio):
+            parts.append(f"{name}（收入占比{ratio:.2%}）")
+        else:
+            parts.append(str(name))
+    if not parts:
+        return None
+    prefix = f"{latest_date}：" if latest_date else ""
+    return prefix + "；".join(parts)
+
+
 def get_company_info(code, fallback_name):
     symbol = f"SH{code}"
     data = {
@@ -133,19 +173,27 @@ def get_company_info(code, fallback_name):
         "主营业务构成": None,
         "所属行业与细分赛道": None,
     }
-    df = ak.stock_individual_basic_info_xq(symbol=symbol)
-    kv = dict(zip(df["item"], df["value"]))
-    name = clean_value(kv.get("org_short_name_cn") or kv.get("org_name_cn") or fallback_name)
-    full_name = clean_value(kv.get("org_name_cn") or name)
-    industry = parse_industry(kv.get("affiliate_industry"))
-    business = clean_value(kv.get("main_operation_business") or kv.get("operating_scope") or kv.get("org_cn_introduction"))
-    data.update({
-        "公司名称与代码": f"{name}（{code}）",
-        "公司名称": name,
-        "公司全称": full_name,
-        "主营业务构成": business,
-        "所属行业与细分赛道": industry,
-    })
+    try:
+        df = retry_call(lambda: ak.stock_individual_basic_info_xq(symbol=symbol), tries=3, sleep_seconds=1.5)
+        kv = dict(zip(df["item"], df["value"]))
+        name = clean_value(kv.get("org_short_name_cn") or kv.get("org_name_cn") or fallback_name)
+        full_name = clean_value(kv.get("org_name_cn") or name)
+        industry = parse_industry(kv.get("affiliate_industry"))
+        business = clean_value(kv.get("main_operation_business") or kv.get("operating_scope") or kv.get("org_cn_introduction"))
+        data.update({
+            "公司名称与代码": f"{name}（{code}）",
+            "公司名称": name,
+            "公司全称": full_name,
+            "主营业务构成": business,
+            "所属行业与细分赛道": industry,
+        })
+    except Exception:
+        pass
+
+    if not data.get("主营业务构成"):
+        data["主营业务构成"] = summarize_business_segments(code)
+    if not data.get("所属行业与细分赛道") and data.get("主营业务构成"):
+        data["所属行业与细分赛道"] = data["主营业务构成"]
     return data
 
 
