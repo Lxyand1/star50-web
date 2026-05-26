@@ -461,11 +461,34 @@ def build_trend_reference(item):
 
 
 POSITIVE_NEWS_KEYWORDS = [
-    "增长", "大涨", "上涨", "突破", "创新高", "中标", "签约", "订单", "增持", "回购", "盈利", "净利", "业绩预增", "资金流入", "主力资金", "融资净买入", "机构调研", "国产替代", "突破", "量产", "扩产", "涨停",
+    "增长", "大涨", "上涨", "突破", "创新高", "中标", "签约", "订单", "增持", "回购", "盈利", "净利", "业绩预增", "资金流入", "主力资金", "融资净买入", "机构调研", "国产替代", "量产", "扩产", "涨停", "全额认购", "获批",
 ]
 NEGATIVE_NEWS_KEYWORDS = [
-    "下跌", "大跌", "减持", "亏损", "预亏", "业绩下滑", "问询", "处罚", "诉讼", "风险", "解禁", "资金流出", "融资净卖出", "跌停", "终止", "撤回", "延期", "警示",
+    "下跌", "大跌", "减持", "亏损", "预亏", "业绩下滑", "问询", "处罚", "诉讼", "风险", "解禁", "资金流出", "融资净卖出", "跌停", "终止", "撤回", "延期", "警示", "转让", "折价",
 ]
+EVENT_RULES = [
+    ("订单/中标", ["中标", "签约", "订单", "合同"], "订单或合同类消息通常代表需求端有新增验证，短期容易改善市场对收入兑现的预期。"),
+    ("业绩/盈利", ["业绩", "净利", "盈利", "预增", "增长", "亏损", "预亏"], "业绩类消息直接影响市场对盈利增速和估值消化能力的判断，是短期情绪的重要来源。"),
+    ("资金/机构", ["主力资金", "资金流入", "资金流出", "融资", "机构调研", "认购", "增持", "回购"], "资金和机构行为会影响短线交易热度，连续正向信号通常更容易带来关注度提升。"),
+    ("股东/股份变动", ["减持", "转让", "询价转让", "解禁", "股东"], "股东或股份变动可能带来供给压力，也可能因机构承接而缓和冲击，需要看定价、规模和受让方结构。"),
+    ("产业/产品", ["突破", "量产", "扩产", "国产替代", "芯片", "产品", "研发", "获批"], "产品和产业进展会影响中短期成长叙事，若与主营业务高度相关，市场关注度通常更高。"),
+    ("监管/风险", ["问询", "处罚", "诉讼", "警示", "风险", "终止", "撤回", "延期"], "监管或风险事件会压制短期风险偏好，需要重点跟踪后续公告是否消除不确定性。"),
+]
+
+
+def classify_news_event(text):
+    for event, keywords, implication in EVENT_RULES:
+        hits = [kw for kw in keywords if kw in text]
+        if hits:
+            return event, hits[:4], implication
+    return "一般新闻", [], "该消息更多体现公司日常动态，短期方向性需要结合成交量、市场风格和后续公告确认。"
+
+
+def compact_summary(summary, limit=88):
+    summary = " ".join(str(summary or "").split())
+    if not summary:
+        return "新闻摘要为空，主要依据标题判断。"
+    return summary if len(summary) <= limit else summary[:limit] + "..."
 
 
 def build_short_term_reference(item):
@@ -474,26 +497,49 @@ def build_short_term_reference(item):
     reasons = []
     risks = []
     analyzed = 0
+    positive_count = 0
+    negative_count = 0
+    neutral_count = 0
+    event_counts = {}
 
-    for news in news_items[:5]:
+    for idx, news in enumerate(news_items[:6], start=1):
         title = str(news.get("标题") or "")
         summary = str(news.get("摘要") or "")
+        source = str(news.get("来源") or "未知来源")
+        time = str(news.get("时间") or "时间未知")
         text = title + " " + summary
         if not title:
             continue
         analyzed += 1
         positive_hits = [kw for kw in POSITIVE_NEWS_KEYWORDS if kw in text]
         negative_hits = [kw for kw in NEGATIVE_NEWS_KEYWORDS if kw in text]
+        event_type, event_hits, implication = classify_news_event(text)
+        event_counts[event_type] = event_counts.get(event_type, 0) + 1
+
         if positive_hits and not negative_hits:
             score += 1
-            reasons.append(f"正面新闻：{title}（关键词：{'、'.join(positive_hits[:3])}）")
+            positive_count += 1
+            sentiment = "偏正面"
+            signal = f"出现 {'、'.join(positive_hits[:3])} 等正面关键词，短线情绪有支撑。"
         elif negative_hits and not positive_hits:
             score -= 1
-            risks.append(f"负面新闻：{title}（关键词：{'、'.join(negative_hits[:3])}）")
+            negative_count += 1
+            sentiment = "偏谨慎"
+            signal = f"出现 {'、'.join(negative_hits[:3])} 等压力关键词，短线需要防范情绪回落。"
         elif positive_hits and negative_hits:
-            reasons.append(f"多空交织：{title}（同时出现正负面信号）")
+            neutral_count += 1
+            sentiment = "多空交织"
+            signal = f"同时出现正面关键词（{'、'.join(positive_hits[:2])}）和压力关键词（{'、'.join(negative_hits[:2])}），需要观察市场如何定价。"
         else:
-            reasons.append(f"中性新闻：{title}")
+            neutral_count += 1
+            sentiment = "中性"
+            signal = "标题和摘要未出现明显多空关键词，暂按中性信息处理。"
+
+        reasons.append(
+            f"新闻{idx}｜{event_type}｜{sentiment}：{title}。来源：{source}，时间：{time}。摘要要点：{compact_summary(summary)}；事件解读：{implication}；短期影响：{signal}"
+        )
+        if negative_hits:
+            risks.append(f"{title}：关注 {'、'.join(negative_hits[:3])} 对短期风险偏好的影响。")
 
     if analyzed == 0:
         return {
@@ -507,10 +553,15 @@ def build_short_term_reference(item):
             "生成方法": "基于最近相关新闻标题与摘要的关键词情绪分析。",
         }
 
+    dominant_events = sorted(event_counts.items(), key=lambda x: x[1], reverse=True)
+    event_text = "、".join([f"{name}{count}条" for name, count in dominant_events[:3]])
+    reasons.insert(0, f"总体新闻结构：共分析最近 {analyzed} 条相关新闻，其中偏正面 {positive_count} 条、偏谨慎 {negative_count} 条、中性/多空交织 {neutral_count} 条；主要事件类型集中在 {event_text or '一般新闻'}。")
+    reasons.insert(1, f"综合判断逻辑：短期走势主要看新闻是否能提升市场关注度、改善盈利预期、带来资金承接，或是否存在减持、解禁、监管、业绩下滑等压力信号；当前新闻评分为 {score}。")
+
     if score >= 2:
         direction = "偏积极"
         title = "新闻面偏暖，短期走势参考偏积极"
-        confidence = "中低"
+        confidence = "中等"
     elif score == 1:
         direction = "中性偏积极"
         title = "新闻面略偏正面，短期走势参考中性偏积极"
@@ -526,12 +577,11 @@ def build_short_term_reference(item):
     else:
         direction = "偏谨慎"
         title = "新闻面压力较多，短期走势参考偏谨慎"
-        confidence = "中低"
+        confidence = "中等"
 
-    if not reasons:
-        reasons.append("最近新闻未形成明显正面信号。")
     if not risks:
         risks.append("新闻情绪不等于股价方向，仍需结合市场风格、成交量和公告变化。")
+    risks.append("如果多条新闻来自同一事件的重复报道，短期评分可能放大该事件影响，需要结合原始公告核对。")
 
     return {
         "标题": title,
@@ -539,9 +589,9 @@ def build_short_term_reference(item):
         "置信度": confidence,
         "评分": score,
         "摘要": f"基于最近 {analyzed} 条相关新闻的标题和摘要，新闻情绪给出“{direction}”短期参考结论。该结论不构成投资建议。",
-        "主要理由": reasons[:8],
-        "风险提示": risks[:6],
-        "生成方法": "基于最近相关新闻标题与摘要的关键词情绪分析，识别订单、业绩、资金、减持、风险等短期事件信号。",
+        "主要理由": reasons[:10],
+        "风险提示": risks[:7],
+        "生成方法": "基于最近相关新闻标题与摘要的事件分类和关键词情绪分析，识别订单、业绩、资金、股东变动、产业进展、监管风险等短期事件信号。",
     }
 
 def fetch(limit=None, sleep_seconds=1.0):
