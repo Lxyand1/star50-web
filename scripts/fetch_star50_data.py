@@ -237,6 +237,160 @@ def get_market(code, days_back=14):
     return {label: clean_value(row[col]) if col in row.index else None for label, col in MARKET_FIELDS.items()}
 
 
+
+def as_number(value):
+    try:
+        if value is None or value == "":
+            return None
+        number = float(value)
+        if math.isnan(number) or math.isinf(number):
+            return None
+        return number
+    except Exception:
+        return None
+
+
+def format_ratio(value):
+    if value is None:
+        return "未知"
+    return f"{value:.2%}"
+
+
+def build_trend_reference(item):
+    company = item.get("company", {})
+    financials = item.get("financials", {})
+    balance = financials.get("资产负债表", {}) or {}
+    income = financials.get("利润表", {}) or {}
+    cashflow = financials.get("现金流量表", {}) or {}
+
+    revenue = as_number(income.get("营业收入"))
+    cost = as_number(income.get("营业成本"))
+    net_profit = as_number(income.get("归母净利润") or income.get("净利润"))
+    operating_profit = as_number(income.get("营业利润"))
+    eps = as_number(income.get("基本每股收益"))
+    operating_cash = as_number(cashflow.get("经营现金流净额"))
+    cash = as_number(balance.get("货币资金"))
+    short_debt = as_number(balance.get("短期借款")) or 0
+    long_debt = as_number(balance.get("长期借款")) or 0
+    assets = as_number(balance.get("资产总计"))
+    liabilities = as_number(balance.get("负债合计"))
+
+    score = 0
+    reasons = []
+    risks = []
+
+    business = company.get("主营业务构成") or "主营业务信息不足"
+    industry = company.get("所属行业与细分赛道") or "行业与细分赛道信息不足"
+    reasons.append(f"主营业务/赛道：{business}")
+    reasons.append(f"行业线索：{industry}")
+
+    if revenue and cost is not None and revenue > 0:
+        gross_margin = (revenue - cost) / revenue
+        if gross_margin >= 0.35:
+            score += 1
+            reasons.append(f"毛利率约 {format_ratio(gross_margin)}，盈利空间相对较好。")
+        elif gross_margin < 0.15:
+            score -= 1
+            risks.append(f"毛利率约 {format_ratio(gross_margin)}，盈利弹性偏弱。")
+    else:
+        risks.append("营业收入或营业成本缺失，无法判断毛利率。")
+
+    if revenue and net_profit is not None and revenue > 0:
+        net_margin = net_profit / revenue
+        if net_profit > 0:
+            score += 1
+            reasons.append(f"归母/净利润为正，净利率约 {format_ratio(net_margin)}。")
+            if net_margin >= 0.15:
+                score += 1
+        else:
+            score -= 2
+            risks.append("归母/净利润为负，半年走势需要偏谨慎。")
+    else:
+        risks.append("利润数据不足，无法判断净利率。")
+
+    if operating_profit is not None:
+        if operating_profit > 0:
+            score += 1
+            reasons.append("营业利润为正，主营经营结果具备支撑。")
+        else:
+            score -= 1
+            risks.append("营业利润为负，主营经营承压。")
+
+    if operating_cash is not None:
+        if operating_cash > 0:
+            score += 1
+            reasons.append("经营现金流净额为正，利润质量有一定支撑。")
+            if net_profit and operating_cash >= net_profit:
+                score += 1
+                reasons.append("经营现金流覆盖净利润，现金回收质量较好。")
+        else:
+            score -= 1
+            risks.append("经营现金流净额为负，需关注回款和投入压力。")
+    else:
+        risks.append("经营现金流数据缺失。")
+
+    if assets and liabilities is not None and assets > 0:
+        debt_ratio = liabilities / assets
+        if debt_ratio <= 0.4:
+            score += 1
+            reasons.append(f"资产负债率约 {format_ratio(debt_ratio)}，资产结构较稳健。")
+        elif debt_ratio >= 0.7:
+            score -= 1
+            risks.append(f"资产负债率约 {format_ratio(debt_ratio)}，财务杠杆偏高。")
+        else:
+            reasons.append(f"资产负债率约 {format_ratio(debt_ratio)}，处于中等水平。")
+
+    total_debt = short_debt + long_debt
+    if cash is not None and total_debt > 0:
+        cover = cash / total_debt
+        if cover >= 2:
+            score += 1
+            reasons.append(f"货币资金约为有息借款的 {cover:.1f} 倍，短期偿债压力较小。")
+        elif cover < 1:
+            score -= 1
+            risks.append("货币资金不足有息借款的 1 倍，需关注偿债压力。")
+    elif cash is not None and total_debt == 0:
+        score += 1
+        reasons.append("未披露明显短长期借款，且账面有货币资金，财务压力较低。")
+
+    if eps is not None:
+        if eps > 0:
+            reasons.append(f"基本每股收益为 {eps:.2f} 元。")
+        else:
+            risks.append("基本每股收益不为正。")
+
+    if score >= 5:
+        direction = "偏积极"
+        title = "基本面支撑较强，半年走势参考偏积极"
+        confidence = "中等"
+    elif score >= 2:
+        direction = "中性偏积极"
+        title = "基本面具备支撑，半年走势参考中性偏积极"
+        confidence = "中等"
+    elif score >= 0:
+        direction = "中性"
+        title = "基本面信号中性，半年走势参考以观察为主"
+        confidence = "中低"
+    else:
+        direction = "偏谨慎"
+        title = "基本面存在压力，半年走势参考偏谨慎"
+        confidence = "中低"
+
+    if not risks:
+        risks.append("仍需关注行业景气度、估值水平、市场风格和公司后续公告变化。")
+
+    return {
+        "标题": title,
+        "方向": direction,
+        "置信度": confidence,
+        "评分": score,
+        "依据报告期": financials.get("报告期"),
+        "摘要": f"基于公司基本信息和最新三大财务报表，模型给出“{direction}”参考结论。该结论不使用实时行情，不构成投资建议。",
+        "主要理由": reasons[:8],
+        "风险提示": risks[:6],
+        "生成方法": "基于主营业务/行业线索、盈利能力、经营现金流、资产负债率、货币资金与有息借款覆盖情况的规则化AI研判。",
+    }
+
 def fetch(limit=None, sleep_seconds=1.0):
     cons_df = ak.index_stock_cons_csindex(symbol="000688")
     rows = cons_df[["成分券代码", "成分券名称"]].drop_duplicates().sort_values("成分券代码")
@@ -278,6 +432,7 @@ def fetch(limit=None, sleep_seconds=1.0):
         except Exception as exc:
             errors.append({"code": code, "stage": "market", "error": str(exc)})
             item["market"] = {k: None for k in MARKET_FIELDS}
+        item["trend"] = build_trend_reference(item)
         stocks.append(item)
         time.sleep(sleep_seconds)
 

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>科创50公司财务与行情数据</title>
   <style>
-    :root{--bg:#FAFAFA;--fg:#111;--accent:#2F6FEB;--muted:#6B6B6B;--border:#E5E5E5;--surface:#fff;--success:#17A34A;--warn:#EAB308;--danger:#DC2626;--font-display:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;--font-body:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;--font-mono:ui-monospace,'JetBrains Mono',monospace;--radius-card:12px;--max:1200px;--gutter:24px}*{box-sizing:border-box}html{min-height:100%;background:var(--bg);color:var(--fg);font-family:var(--font-body);line-height:1.5;-webkit-font-smoothing:antialiased}body{margin:0;min-height:100vh;background:var(--bg)}button,input,select{font:inherit}.app-shell{min-height:100vh;display:grid;grid-template-rows:auto 1fr}.topbar{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}.topbar-inner{max-width:var(--max);margin:0 auto;padding:16px var(--gutter);display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}.brand{display:flex;align-items:center;gap:12px;min-width:0}.brand-mark{width:32px;height:32px;border-radius:8px;background:var(--accent);display:grid;place-items:center;color:#fff;font-weight:600;flex:0 0 auto}.brand-title{min-width:0}.brand-title h1{margin:0;font-family:var(--font-display);font-size:20px;line-height:1.2;font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brand-title p{margin:2px 0 0;color:var(--muted);font-size:12px}.nav{display:flex;gap:6px;padding:4px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}.nav button{appearance:none;border:0;background:transparent;color:var(--muted);padding:8px 12px;border-radius:8px;cursor:pointer;font-size:14px;white-space:nowrap}.nav button:hover{color:var(--fg);background:var(--bg)}.nav button[aria-selected=true]{background:var(--accent);color:#fff}main{max-width:var(--max);width:100%;margin:0 auto;padding:32px var(--gutter) 80px}.toolbar{display:grid;grid-template-columns:minmax(220px,360px) 1fr;gap:16px;align-items:end;margin-bottom:24px}.control{display:grid;gap:8px}.control label{font-size:13px;color:var(--muted)}select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:#fff;color:var(--fg)}.meta{color:var(--muted);font-size:13px}.page{display:none;animation:appear 180ms ease both}.page.is-active{display:block}@keyframes appear{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}.page-head{display:grid;gap:8px;margin-bottom:24px}.eyebrow{margin:0;color:var(--accent);font-family:var(--font-mono);font-size:12px;letter-spacing:.02em}.page-head h2{margin:0;font-family:var(--font-display);font-size:32px;line-height:1.2;font-weight:600;letter-spacing:-.01em}.page-head p{margin:0;max-width:760px;color:var(--muted);font-size:16px}.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:24px}.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-card);padding:20px}.span-4{grid-column:span 4}.span-12{grid-column:span 12}.field-card{min-height:144px;display:grid;align-content:space-between;gap:20px}.field-label{margin:0;color:var(--muted);font-size:14px}.field-value{margin:0;color:var(--fg);font-family:var(--font-display);font-size:22px;line-height:1.35;font-weight:600;letter-spacing:-.01em;word-break:break-word}.value-code{font-family:var(--font-mono);font-size:20px;letter-spacing:0}.statement-stack{display:grid;gap:24px}.statement{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-card);overflow:hidden}.statement-title{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:16px}.statement-title h3{margin:0;font-family:var(--font-display);font-size:20px;line-height:1.2;font-weight:600}.statement-title span{color:var(--muted);font-size:13px}.table-wrap{width:100%;overflow-x:auto}table{width:100%;min-width:560px;border-collapse:collapse}th,td{padding:14px 20px;border-bottom:1px solid var(--border);text-align:left;vertical-align:middle;font-size:14px}th{color:var(--muted);font-weight:400;background:var(--bg)}td:first-child{color:var(--fg);font-weight:500}td:last-child{color:var(--fg);font-family:var(--font-mono);font-variant-numeric:tabular-nums}tr:last-child td{border-bottom:0}.market-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.market-item{border:1px solid var(--border);border-radius:12px;padding:16px;background:var(--surface);min-height:104px;display:grid;align-content:space-between;gap:14px}.market-label{margin:0;color:var(--muted);font-size:14px}.market-value{margin:0;color:var(--fg);font-family:var(--font-mono);font-size:20px;line-height:1.2;font-variant-numeric:tabular-nums;word-break:break-word}.placeholder{color:var(--muted)}.screen-note{margin-top:24px;color:var(--muted);font-size:12px}.badge{display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:999px;padding:4px 10px;background:#fff;color:var(--muted);font-size:12px}.error{color:var(--danger)}@media(max-width:1023px){:root{--gutter:16px}.topbar-inner{grid-template-columns:1fr;gap:14px}.nav{width:100%;overflow-x:auto}.toolbar{grid-template-columns:1fr}.grid{grid-template-columns:repeat(8,minmax(0,1fr));gap:16px}.span-4,.span-12{grid-column:span 8}.market-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:639px){:root{--gutter:12px}.topbar-inner{padding:12px var(--gutter)}main{padding:24px var(--gutter) 56px}.brand-title h1{font-size:16px}.brand-title p{display:none}.nav button{padding:8px 10px;font-size:13px}.page-head h2{font-size:24px}.page-head p{font-size:14px}.grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.card,.span-4,.span-12{grid-column:span 4}.card{padding:16px}.field-card{min-height:116px}.field-value{font-size:20px}.market-grid{grid-template-columns:1fr}}
+    :root{--bg:#FAFAFA;--fg:#111;--accent:#2F6FEB;--muted:#6B6B6B;--border:#E5E5E5;--surface:#fff;--success:#17A34A;--warn:#EAB308;--danger:#DC2626;--font-display:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;--font-body:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;--font-mono:ui-monospace,'JetBrains Mono',monospace;--radius-card:12px;--max:1200px;--gutter:24px}*{box-sizing:border-box}html{min-height:100%;background:var(--bg);color:var(--fg);font-family:var(--font-body);line-height:1.5;-webkit-font-smoothing:antialiased}body{margin:0;min-height:100vh;background:var(--bg)}button,input,select{font:inherit}.app-shell{min-height:100vh;display:grid;grid-template-rows:auto 1fr}.topbar{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}.topbar-inner{max-width:var(--max);margin:0 auto;padding:16px var(--gutter);display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}.brand{display:flex;align-items:center;gap:12px;min-width:0}.brand-mark{width:32px;height:32px;border-radius:8px;background:var(--accent);display:grid;place-items:center;color:#fff;font-weight:600;flex:0 0 auto}.brand-title{min-width:0}.brand-title h1{margin:0;font-family:var(--font-display);font-size:20px;line-height:1.2;font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brand-title p{margin:2px 0 0;color:var(--muted);font-size:12px}.nav{display:flex;gap:6px;padding:4px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}.nav button{appearance:none;border:0;background:transparent;color:var(--muted);padding:8px 12px;border-radius:8px;cursor:pointer;font-size:14px;white-space:nowrap}.nav button:hover{color:var(--fg);background:var(--bg)}.nav button[aria-selected=true]{background:var(--accent);color:#fff}main{max-width:var(--max);width:100%;margin:0 auto;padding:32px var(--gutter) 80px}.toolbar{display:grid;grid-template-columns:minmax(220px,360px) 1fr;gap:16px;align-items:end;margin-bottom:24px}.control{display:grid;gap:8px}.control label{font-size:13px;color:var(--muted)}select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:#fff;color:var(--fg)}.meta{color:var(--muted);font-size:13px}.page{display:none;animation:appear 180ms ease both}.page.is-active{display:block}@keyframes appear{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}.page-head{display:grid;gap:8px;margin-bottom:24px}.eyebrow{margin:0;color:var(--accent);font-family:var(--font-mono);font-size:12px;letter-spacing:.02em}.page-head h2{margin:0;font-family:var(--font-display);font-size:32px;line-height:1.2;font-weight:600;letter-spacing:-.01em}.page-head p{margin:0;max-width:760px;color:var(--muted);font-size:16px}.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:24px}.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-card);padding:20px}.span-4{grid-column:span 4}.span-12{grid-column:span 12}.field-card{min-height:144px;display:grid;align-content:space-between;gap:20px}.field-label{margin:0;color:var(--muted);font-size:14px}.field-value{margin:0;color:var(--fg);font-family:var(--font-display);font-size:22px;line-height:1.35;font-weight:600;letter-spacing:-.01em;word-break:break-word}.value-code{font-family:var(--font-mono);font-size:20px;letter-spacing:0}.statement-stack{display:grid;gap:24px}.statement{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-card);overflow:hidden}.statement-title{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:16px}.statement-title h3{margin:0;font-family:var(--font-display);font-size:20px;line-height:1.2;font-weight:600}.statement-title span{color:var(--muted);font-size:13px}.table-wrap{width:100%;overflow-x:auto}table{width:100%;min-width:560px;border-collapse:collapse}th,td{padding:14px 20px;border-bottom:1px solid var(--border);text-align:left;vertical-align:middle;font-size:14px}th{color:var(--muted);font-weight:400;background:var(--bg)}td:first-child{color:var(--fg);font-weight:500}td:last-child{color:var(--fg);font-family:var(--font-mono);font-variant-numeric:tabular-nums}tr:last-child td{border-bottom:0}.market-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.market-item{border:1px solid var(--border);border-radius:12px;padding:16px;background:var(--surface);min-height:104px;display:grid;align-content:space-between;gap:14px}.market-label{margin:0;color:var(--muted);font-size:14px}.market-value{margin:0;color:var(--fg);font-family:var(--font-mono);font-size:20px;line-height:1.2;font-variant-numeric:tabular-nums;word-break:break-word}.placeholder{color:var(--muted)}.screen-note{margin-top:24px;color:var(--muted);font-size:12px}.badge{display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:999px;padding:4px 10px;background:#fff;color:var(--muted);font-size:12px}.trend-hero{display:grid;grid-template-columns:1.2fr .8fr;gap:24px;align-items:stretch}.trend-card{background:linear-gradient(135deg,#fff 0%,#f3f7ff 100%);border:1px solid var(--border);border-radius:var(--radius-card);padding:24px}.trend-title{margin:0 0 12px;font-family:var(--font-display);font-size:28px;line-height:1.25;font-weight:600;letter-spacing:-.01em}.trend-summary{margin:0;color:var(--muted);font-size:15px}.trend-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:20px}.trend-metric{border:1px solid var(--border);border-radius:12px;background:#fff;padding:14px}.trend-metric span{display:block;color:var(--muted);font-size:12px}.trend-metric strong{display:block;margin-top:6px;font-family:var(--font-display);font-size:18px}.reason-list{margin:0;padding:0;list-style:none;display:grid;gap:12px}.reason-list li{border:1px solid var(--border);border-radius:12px;background:#fff;padding:14px;color:var(--fg)}.risk-list li{background:#fffaf0}.trend-method{margin-top:16px;color:var(--muted);font-size:13px}.error{color:var(--danger)}@media(max-width:1023px){:root{--gutter:16px}.topbar-inner{grid-template-columns:1fr;gap:14px}.nav{width:100%;overflow-x:auto}.toolbar{grid-template-columns:1fr}.grid{grid-template-columns:repeat(8,minmax(0,1fr));gap:16px}.span-4,.span-12{grid-column:span 8}.market-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.trend-hero{grid-template-columns:1fr}.trend-metrics{grid-template-columns:1fr}}@media(max-width:639px){:root{--gutter:12px}.topbar-inner{padding:12px var(--gutter)}main{padding:24px var(--gutter) 56px}.brand-title h1{font-size:16px}.brand-title p{display:none}.nav button{padding:8px 10px;font-size:13px}.page-head h2{font-size:24px}.page-head p{font-size:14px}.grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.card,.span-4,.span-12{grid-column:span 4}.card{padding:16px}.field-card{min-height:116px}.field-value{font-size:20px}.market-grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -16,13 +16,14 @@
         <div class="brand-mark">财</div>
         <div class="brand-title">
           <h1>科创50公司财务与行情数据</h1>
-          <p>公司基本信息 · 三大财务报表 · 当天行情</p>
+          <p>公司基本信息 · 三大财务报表 · 当天行情 · 半年走势参考</p>
         </div>
       </div>
       <nav class="nav" aria-label="页面导航">
         <button type="button" data-page-target="overview" aria-selected="true">公司基本信息</button>
         <button type="button" data-page-target="financials" aria-selected="false">三大财务报表</button>
         <button type="button" data-page-target="market" aria-selected="false">行情数据</button>
+        <button type="button" data-page-target="trend" aria-selected="false">半年走势参考</button>
       </nav>
     </div>
   </header>
@@ -63,6 +64,31 @@
       <div class="page-head"><p class="eyebrow">SECTION 03</p><h2 id="market-title">行情数据</h2><p>展示当天或最近交易日行情数据，不进行实时更新。</p></div>
       <div class="market-grid" id="marketGrid" aria-label="当天行情"></div>
       <p class="screen-note">说明：若当天不是交易日或数据尚未更新，页面会显示最近一个有行情数据的交易日。</p>
+    </section>
+
+    <section class="page" id="trend" data-page="trend" aria-labelledby="trend-title">
+      <div class="page-head"><p class="eyebrow">SECTION 04</p><h2 id="trend-title">半年走势参考</h2><p>基于公司基本信息和最新三大财务报表生成趋势研判，展示结论、理由和风险提示。</p></div>
+      <div class="trend-hero">
+        <article class="trend-card">
+          <h3 class="trend-title" id="trendHeadline">—</h3>
+          <p class="trend-summary" id="trendSummary">—</p>
+          <div class="trend-metrics">
+            <div class="trend-metric"><span>方向</span><strong id="trendDirection">—</strong></div>
+            <div class="trend-metric"><span>置信度</span><strong id="trendConfidence">—</strong></div>
+            <div class="trend-metric"><span>依据报告期</span><strong id="trendReportDate">—</strong></div>
+          </div>
+          <p class="trend-method" id="trendMethod">—</p>
+        </article>
+        <article class="statement">
+          <div class="statement-title"><h3>风险提示</h3><span>非投资建议</span></div>
+          <div class="card"><ul class="reason-list risk-list" id="trendRisks"></ul></div>
+        </article>
+      </div>
+      <div class="statement" style="margin-top:24px">
+        <div class="statement-title"><h3>AI研判理由</h3><span>来自基本信息与三大财务报表</span></div>
+        <div class="card"><ul class="reason-list" id="trendReasons"></ul></div>
+      </div>
+      <p class="screen-note">说明：该部分为规则化AI辅助研判，只用于信息参考，不构成买卖建议；未纳入实时行情、估值、市值和宏观事件。</p>
     </section>
   </main>
 </div>
@@ -123,6 +149,21 @@
       return `<article class="market-item"><p class="market-label">${label}</p><p class="market-value${cls}">${val}</p></article>`;
     }).join('');
   }
+  function renderList(id, values, emptyText){
+    const entries = Array.isArray(values) && values.length ? values : [emptyText];
+    document.getElementById(id).innerHTML = entries.map(text=>`<li>${dash(text)}</li>`).join('');
+  }
+  function renderTrend(trend){
+    const result = trend || {};
+    setText('trendHeadline', result['标题']);
+    setText('trendSummary', result['摘要']);
+    setText('trendDirection', result['方向']);
+    setText('trendConfidence', result['置信度']);
+    setText('trendReportDate', result['依据报告期']);
+    setText('trendMethod', result['生成方法']);
+    renderList('trendReasons', result['主要理由'], '暂无可用于研判的理由数据。');
+    renderList('trendRisks', result['风险提示'], '暂无风险提示数据。');
+  }
   function renderStock(stock){
     if(!stock) return;
     const company = stock.company || {};
@@ -136,6 +177,7 @@
     renderRows('incomeBody', FIELDS.income, financials['利润表']);
     renderRows('cashBody', FIELDS.cash, financials['现金流量表']);
     renderMarket(stock.market || {});
+    renderTrend(stock.trend || {});
   }
   function init(data){
     dataset = data || {stocks:[]};
@@ -143,7 +185,7 @@
     document.getElementById('dataMeta').innerHTML = `数据源：${dash(dataset.source)}；生成时间：${dash(dataset.generated_at)}；股票数量：${stocks.length}`;
     if(!stocks.length){
       select.innerHTML = '<option>暂无数据：请先运行采集脚本</option>';
-      renderRows('balanceBody', FIELDS.balance, {}); renderRows('incomeBody', FIELDS.income, {}); renderRows('cashBody', FIELDS.cash, {}); renderMarket({});
+      renderRows('balanceBody', FIELDS.balance, {}); renderRows('incomeBody', FIELDS.income, {}); renderRows('cashBody', FIELDS.cash, {}); renderMarket({}); renderTrend({});
       return;
     }
     select.innerHTML = stocks.map((s,i)=>`<option value="${i}">${s.name || s.company?.['公司名称'] || s.code}（${s.code}）</option>`).join('');
