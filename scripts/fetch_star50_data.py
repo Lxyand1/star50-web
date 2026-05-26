@@ -459,6 +459,91 @@ def build_trend_reference(item):
         "生成方法": "基于主营业务/行业线索、盈利能力、经营现金流、资产负债率、货币资金与有息借款覆盖情况的规则化AI研判。",
     }
 
+
+POSITIVE_NEWS_KEYWORDS = [
+    "增长", "大涨", "上涨", "突破", "创新高", "中标", "签约", "订单", "增持", "回购", "盈利", "净利", "业绩预增", "资金流入", "主力资金", "融资净买入", "机构调研", "国产替代", "突破", "量产", "扩产", "涨停",
+]
+NEGATIVE_NEWS_KEYWORDS = [
+    "下跌", "大跌", "减持", "亏损", "预亏", "业绩下滑", "问询", "处罚", "诉讼", "风险", "解禁", "资金流出", "融资净卖出", "跌停", "终止", "撤回", "延期", "警示",
+]
+
+
+def build_short_term_reference(item):
+    news_items = item.get("news") or []
+    score = 0
+    reasons = []
+    risks = []
+    analyzed = 0
+
+    for news in news_items[:5]:
+        title = str(news.get("标题") or "")
+        summary = str(news.get("摘要") or "")
+        text = title + " " + summary
+        if not title:
+            continue
+        analyzed += 1
+        positive_hits = [kw for kw in POSITIVE_NEWS_KEYWORDS if kw in text]
+        negative_hits = [kw for kw in NEGATIVE_NEWS_KEYWORDS if kw in text]
+        if positive_hits and not negative_hits:
+            score += 1
+            reasons.append(f"正面新闻：{title}（关键词：{'、'.join(positive_hits[:3])}）")
+        elif negative_hits and not positive_hits:
+            score -= 1
+            risks.append(f"负面新闻：{title}（关键词：{'、'.join(negative_hits[:3])}）")
+        elif positive_hits and negative_hits:
+            reasons.append(f"多空交织：{title}（同时出现正负面信号）")
+        else:
+            reasons.append(f"中性新闻：{title}")
+
+    if analyzed == 0:
+        return {
+            "标题": "新闻数据不足，短期走势参考暂以观察为主",
+            "方向": "中性",
+            "置信度": "低",
+            "评分": 0,
+            "摘要": "最近相关新闻不足，暂不形成明确短期方向判断。",
+            "主要理由": ["未获取到足够的相关新闻标题和摘要。"],
+            "风险提示": ["短期走势受市场情绪、资金流向和突发事件影响较大。"],
+            "生成方法": "基于最近相关新闻标题与摘要的关键词情绪分析。",
+        }
+
+    if score >= 2:
+        direction = "偏积极"
+        title = "新闻面偏暖，短期走势参考偏积极"
+        confidence = "中低"
+    elif score == 1:
+        direction = "中性偏积极"
+        title = "新闻面略偏正面，短期走势参考中性偏积极"
+        confidence = "中低"
+    elif score == 0:
+        direction = "中性"
+        title = "新闻面信号中性，短期走势参考以观察为主"
+        confidence = "中低"
+    elif score == -1:
+        direction = "中性偏谨慎"
+        title = "新闻面略有压力，短期走势参考中性偏谨慎"
+        confidence = "中低"
+    else:
+        direction = "偏谨慎"
+        title = "新闻面压力较多，短期走势参考偏谨慎"
+        confidence = "中低"
+
+    if not reasons:
+        reasons.append("最近新闻未形成明显正面信号。")
+    if not risks:
+        risks.append("新闻情绪不等于股价方向，仍需结合市场风格、成交量和公告变化。")
+
+    return {
+        "标题": title,
+        "方向": direction,
+        "置信度": confidence,
+        "评分": score,
+        "摘要": f"基于最近 {analyzed} 条相关新闻的标题和摘要，新闻情绪给出“{direction}”短期参考结论。该结论不构成投资建议。",
+        "主要理由": reasons[:8],
+        "风险提示": risks[:6],
+        "生成方法": "基于最近相关新闻标题与摘要的关键词情绪分析，识别订单、业绩、资金、减持、风险等短期事件信号。",
+    }
+
 def fetch(limit=None, sleep_seconds=1.0):
     cons_df = ak.index_stock_cons_csindex(symbol="000688")
     rows = cons_df[["成分券代码", "成分券名称"]].drop_duplicates().sort_values("成分券代码")
@@ -513,6 +598,7 @@ def fetch(limit=None, sleep_seconds=1.0):
                 "摘要": None,
             }]
         item["trend"] = build_trend_reference(item)
+        item["short_term"] = build_short_term_reference(item)
         stocks.append(item)
         time.sleep(sleep_seconds)
 

@@ -16,7 +16,7 @@
         <div class="brand-mark">财</div>
         <div class="brand-title">
           <h1>科创50公司财务与行情数据</h1>
-          <p>公司基本信息 · 三大财务报表 · 当天行情 · 半年走势参考</p>
+          <p>公司基本信息 · 三大财务报表 · 当天行情 · 半年走势参考 · 短期走势参考</p>
         </div>
       </div>
       <nav class="nav" aria-label="页面导航">
@@ -24,6 +24,7 @@
         <button type="button" data-page-target="financials" aria-selected="false">三大财务报表</button>
         <button type="button" data-page-target="market" aria-selected="false">行情数据</button>
         <button type="button" data-page-target="trend" aria-selected="false">半年走势参考</button>
+        <button type="button" data-page-target="shortTerm" aria-selected="false">短期走势参考</button>
       </nav>
     </div>
   </header>
@@ -90,6 +91,31 @@
         <div class="card"><ul class="reason-list" id="trendReasons"></ul></div>
       </div>
       <p class="screen-note">说明：该部分为规则化AI辅助研判，只用于信息参考，不构成买卖建议；未纳入实时行情、估值、市值和宏观事件。</p>
+    </section>
+
+    <section class="page" id="shortTerm" data-page="shortTerm" aria-labelledby="short-term-title">
+      <div class="page-head"><p class="eyebrow">SECTION 05</p><h2 id="short-term-title">短期走势参考</h2><p>基于最近相关新闻进行短期新闻情绪研判，展示结论、理由和风险提示。</p></div>
+      <div class="trend-hero">
+        <article class="trend-card">
+          <h3 class="trend-title" id="shortTermHeadline">—</h3>
+          <p class="trend-summary" id="shortTermSummary">—</p>
+          <div class="trend-metrics">
+            <div class="trend-metric"><span>方向</span><strong id="shortTermDirection">—</strong></div>
+            <div class="trend-metric"><span>置信度</span><strong id="shortTermConfidence">—</strong></div>
+            <div class="trend-metric"><span>新闻评分</span><strong id="shortTermScore">—</strong></div>
+          </div>
+          <p class="trend-method" id="shortTermMethod">—</p>
+        </article>
+        <article class="statement">
+          <div class="statement-title"><h3>风险提示</h3><span>新闻情绪不等于股价</span></div>
+          <div class="card"><ul class="reason-list risk-list" id="shortTermRisks"></ul></div>
+        </article>
+      </div>
+      <div class="statement" style="margin-top:24px">
+        <div class="statement-title"><h3>AI新闻分析理由</h3><span>来自最近相关新闻</span></div>
+        <div class="card"><ul class="reason-list" id="shortTermReasons"></ul></div>
+      </div>
+      <p class="screen-note">说明：该部分只分析最近相关新闻标题与摘要中的短期事件信号，不构成买卖建议。</p>
     </section>
   </main>
 </div>
@@ -183,6 +209,17 @@
     renderList('trendReasons', result['主要理由'], '暂无可用于研判的理由数据。');
     renderList('trendRisks', result['风险提示'], '暂无风险提示数据。');
   }
+  function renderShortTerm(shortTerm){
+    const result = shortTerm || {};
+    setText('shortTermHeadline', result['标题']);
+    setText('shortTermSummary', result['摘要']);
+    setText('shortTermDirection', result['方向']);
+    setText('shortTermConfidence', result['置信度']);
+    setText('shortTermScore', result['评分']);
+    setText('shortTermMethod', result['生成方法']);
+    renderList('shortTermReasons', result['主要理由'], '暂无可用于新闻研判的理由数据。');
+    renderList('shortTermRisks', result['风险提示'], '暂无风险提示数据。');
+  }
   function renderStock(stock){
     if(!stock) return;
     const company = stock.company || {};
@@ -198,6 +235,7 @@
     renderRows('cashBody', FIELDS.cash, financials['现金流量表']);
     renderMarket(stock.market || {});
     renderTrend(stock.trend || {});
+    renderShortTerm(stock.short_term || {});
   }
   function init(data){
     dataset = data || {stocks:[]};
@@ -205,7 +243,7 @@
     document.getElementById('dataMeta').innerHTML = `数据源：${dash(dataset.source)}；生成时间：${dash(dataset.generated_at)}；股票数量：${stocks.length}`;
     if(!stocks.length){
       select.innerHTML = '<option>暂无数据：请先运行采集脚本</option>';
-      renderRows('balanceBody', FIELDS.balance, {}); renderRows('incomeBody', FIELDS.income, {}); renderRows('cashBody', FIELDS.cash, {}); renderMarket({}); renderNews([]); renderTrend({});
+      renderRows('balanceBody', FIELDS.balance, {}); renderRows('incomeBody', FIELDS.income, {}); renderRows('cashBody', FIELDS.cash, {}); renderMarket({}); renderNews([]); renderTrend({}); renderShortTerm({});
       return;
     }
     select.innerHTML = stocks.map((s,i)=>`<option value="${i}">${s.name || s.company?.['公司名称'] || s.code}（${s.code}）</option>`).join('');
