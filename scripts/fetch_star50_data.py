@@ -290,7 +290,7 @@ def get_recent_news(code, name, limit=5):
         })
     return news or fallback
 
-def get_market(code, days_back=14):
+def get_market_history(code, days_back=180, limit=80):
     end = date.today()
     start = end - timedelta(days=days_back)
     df = ak.stock_zh_a_daily(
@@ -300,9 +300,19 @@ def get_market(code, days_back=14):
         adjust="",
     )
     if df is None or df.empty:
+        return []
+    work = df.sort_values("date").tail(limit)
+    rows = []
+    for _, row in work.iterrows():
+        rows.append({label: clean_value(row[col]) if col in row.index else None for label, col in MARKET_FIELDS.items()})
+    return rows
+
+
+def get_market(code, days_back=14):
+    history = get_market_history(code, days_back=days_back, limit=1)
+    if not history:
         return {k: None for k in MARKET_FIELDS}
-    row = df.sort_values("date").iloc[-1]
-    return {label: clean_value(row[col]) if col in row.index else None for label, col in MARKET_FIELDS.items()}
+    return history[-1]
 
 
 
@@ -631,10 +641,12 @@ def fetch(limit=None, sleep_seconds=1.0):
             }
         time.sleep(sleep_seconds)
         try:
-            item["market"] = get_market(code)
+            item["market_history"] = get_market_history(code)
+            item["market"] = item["market_history"][-1] if item["market_history"] else {k: None for k in MARKET_FIELDS}
         except Exception as exc:
             errors.append({"code": code, "stage": "market", "error": str(exc)})
             item["market"] = {k: None for k in MARKET_FIELDS}
+            item["market_history"] = []
         time.sleep(sleep_seconds)
         try:
             item["news"] = get_recent_news(code, item.get("company", {}).get("公司名称") or name)
