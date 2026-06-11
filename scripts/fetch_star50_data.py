@@ -315,6 +315,91 @@ def get_market(code, days_back=14):
     return history[-1]
 
 
+def market_number(row, key):
+    try:
+        value = row.get(key) if row else None
+        if value is None or value == "":
+            return None
+        value = float(value)
+        if math.isnan(value) or math.isinf(value):
+            return None
+        return value
+    except Exception:
+        return None
+
+
+def market_ma(history, period):
+    if not history or len(history) < period:
+        return None
+    values = [market_number(row, "收盘价") for row in history[-period:]]
+    if any(value is None for value in values):
+        return None
+    return sum(values) / period
+
+
+def build_market_indicators(history):
+    rows = [row for row in (history or []) if row]
+    latest = rows[-1] if rows else {}
+    prev = rows[-2] if len(rows) >= 2 else {}
+    first = rows[0] if rows else {}
+
+    close = market_number(latest, "收盘价")
+    open_price = market_number(latest, "开盘价")
+    high = market_number(latest, "最高价")
+    low = market_number(latest, "最低价")
+    prev_close = market_number(prev, "收盘价")
+    first_close = market_number(first, "收盘价")
+    volumes = [market_number(row, "成交量") or 0 for row in rows]
+    highs = [market_number(row, "最高价") for row in rows]
+    lows = [market_number(row, "最低价") for row in rows]
+    highs = [value for value in highs if value is not None]
+    lows = [value for value in lows if value is not None]
+    period_high = max(highs) if highs else None
+    period_low = min(lows) if lows else None
+    avg_volume = sum(volumes) / len(volumes) if volumes else None
+    latest_volume = market_number(latest, "成交量")
+
+    change = close - prev_close if close is not None and prev_close else None
+    change_pct = change / prev_close if change is not None and prev_close else None
+    open_close_pct = (close - open_price) / open_price if close is not None and open_price else None
+    period_change_pct = (close - first_close) / first_close if close is not None and first_close else None
+    amplitude = (period_high - period_low) / period_low if period_high is not None and period_low else None
+    volume_ratio = latest_volume / avg_volume if latest_volume is not None and avg_volume else None
+    position_ratio = (close - period_low) / (period_high - period_low) if close is not None and period_high is not None and period_low is not None and period_high > period_low else None
+
+    if position_ratio is None:
+        position_label = "未知"
+    elif position_ratio >= 0.68:
+        position_label = "区间偏高位"
+    elif position_ratio <= 0.32:
+        position_label = "区间偏低位"
+    else:
+        position_label = "区间中部"
+
+    return {
+        "latest_date": latest.get("日期"),
+        "previous_close": prev_close,
+        "change": change,
+        "change_pct": change_pct,
+        "open_close_pct": open_close_pct,
+        "period_days": len(rows),
+        "period_start": first.get("日期"),
+        "period_end": latest.get("日期"),
+        "period_high": period_high,
+        "period_low": period_low,
+        "period_change_pct": period_change_pct,
+        "period_amplitude": amplitude,
+        "position_ratio": position_ratio,
+        "position_label": position_label,
+        "avg_volume": avg_volume,
+        "volume_ratio": volume_ratio,
+        "ma5": market_ma(rows, 5),
+        "ma10": market_ma(rows, 10),
+        "ma20": market_ma(rows, 20),
+        "ma60": market_ma(rows, 60),
+    }
+
+
 
 def as_number(value):
     try:
@@ -643,10 +728,12 @@ def fetch(limit=None, sleep_seconds=1.0):
         try:
             item["market_history"] = get_market_history(code)
             item["market"] = item["market_history"][-1] if item["market_history"] else {k: None for k in MARKET_FIELDS}
+            item["market_indicators"] = build_market_indicators(item["market_history"])
         except Exception as exc:
             errors.append({"code": code, "stage": "market", "error": str(exc)})
             item["market"] = {k: None for k in MARKET_FIELDS}
             item["market_history"] = []
+            item["market_indicators"] = build_market_indicators([])
         time.sleep(sleep_seconds)
         try:
             item["news"] = get_recent_news(code, item.get("company", {}).get("公司名称") or name)
