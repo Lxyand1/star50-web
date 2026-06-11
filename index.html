@@ -273,7 +273,7 @@
   }
   function normalizeMarketHistory(market, history){
     const rows = Array.isArray(history) ? history.filter(item => item && item['日期']) : [];
-    if(rows.length) return rows.slice(-60);
+    if(rows.length) return rows.slice(-120);
     return market && market['日期'] ? [market] : [];
   }
   function movingAverage(rows, period){
@@ -351,7 +351,7 @@
     const xAt = i => layout.left + (rows.length === 1 ? .5 : i / (rows.length - 1)) * layout.plotW;
     drawCanvasGrid(ctx, layout, hi, lo, maxVolume);
     const ma5 = calcMA(rows,5), ma10 = calcMA(rows,10), ma20 = calcMA(rows,20), ma60 = calcMA(rows,60);
-    const bodyW = Math.max(2, Math.min(9, layout.plotW / rows.length * .56));
+    const bodyW = Math.max(1.4, Math.min(7, layout.plotW / rows.length * .48));
     rows.forEach((row, i) => {
       const x = xAt(i);
       const up = row.close >= row.open;
@@ -496,7 +496,7 @@
     ];
     const sideRows = [
       ['流动股本', compactNumber(latest['流动股本'])], ['区间最高', formatNumber(indicators.period_high ?? high)], ['区间最低', formatNumber(indicators.period_low ?? low)], ['区间振幅', Number.isFinite(amplitude)?amplitude.toFixed(2)+'%':'—'],
-      ['区间涨跌', Number.isFinite(rangeChange)?rangeChange.toFixed(2)+'%':'—'], ['区间位置', positionText], ['开收涨跌', Number.isFinite(openClosePct)?openClosePct.toFixed(2)+'%':'—'], ['K线数量', (indicators.period_days || rows.length) + ' 日'],
+      ['区间涨跌', Number.isFinite(rangeChange)?rangeChange.toFixed(2)+'%':'—'], ['区间位置', positionText], ['开收涨跌', Number.isFinite(openClosePct)?openClosePct.toFixed(2)+'%':'—'], ['K线数量', rows.length + ' 日'],
       ['阶段均量', compactNumber(indicators.avg_volume)], ['统计起点', dash(indicators.period_start)], ['统计终点', dash(indicators.period_end)], ['最新日期', dash(indicators.latest_date || lastDate)]
     ];
     visual.innerHTML = `<div class="market-visual-head"><div><span class="short-term-chip">THS STYLE MARKET</span><h3>行情数据</h3><p>参考同花顺个股行情页的信息层级，展示报价、日K、均线、成交量和核心行情指标。</p></div><span class="market-date-pill">${escapeHtml(firstDate)} → ${escapeHtml(lastDate)}</span></div><div class="ths-terminal"><section class="compact-quote-strip"><div class="compact-main-quote"><div class="compact-stock-line"><strong>${escapeHtml(name)}</strong><span>${escapeHtml(code)}</span></div><div class="compact-price-line ${tone}"><strong>${formatNumber(close)}</strong><span>${Number.isFinite(dayChange)?sign+formatNumber(dayChange):'—'}</span><span>${Number.isFinite(dayChangePct)?sign+dayChangePct.toFixed(2)+'%':'—'}</span></div></div><div class="compact-quote-grid"><div class="compact-quote-cell"><span>高</span><strong class="compact-red">${formatNumber(latest['最高价'])}</strong></div><div class="compact-quote-cell"><span>市值</span><strong>${compactNumber((Number(latest['流动股本'])||0)*close)}</strong></div><div class="compact-quote-cell"><span>量比</span><strong>${Number.isFinite(volumeRatio)?volumeRatio.toFixed(2):'—'}</strong></div><div class="compact-quote-cell"><span>低</span><strong class="compact-green">${formatNumber(latest['最低价'])}</strong></div><div class="compact-quote-cell"><span>流通</span><strong>${compactNumber(latest['流动股本'])}</strong></div><div class="compact-quote-cell"><span>换</span><strong>${formatNumber(turnover,'换手率')}</strong></div><div class="compact-quote-cell"><span>开</span><strong class="compact-red">${formatNumber(open)}</strong></div><div class="compact-quote-cell"><span>市盈</span><strong>${dash(stock?.financials?.['利润表']?.['基本每股收益'])==='—'?'—':(close/Number(stock.financials['利润表']['基本每股收益'])).toFixed(2)}</strong></div><div class="compact-quote-cell"><span>额</span><strong>${compactNumber(latest['成交额'])}</strong></div></div></section><section class="ths-chart-shell"><div class="ths-tabs"><div class="ths-tab-left"><button>分时</button><button class="active">日K</button><button>周K</button><button>月K</button><button>更多</button></div><div class="ths-tab-right"><span>MA5</span><span>MA10</span><span>MA20</span><span>MA60</span><span>VOL</span></div></div><div class="ths-chart canvas-chart"><div class="ths-legend"><b style="color:#2f6feb">MA5</b><b style="color:#f59e0b">MA10</b><b style="color:#e85aa7">MA20</b><b style="color:#17b8a6">MA60</b><span>Canvas K线</span></div><canvas id="klineCanvas" class="kline-canvas" aria-label="专业K线图"></canvas><div id="klineCanvasTooltip" class="kline-tooltip"></div><span class="canvas-chart-note">鼠标悬停查看开高低收</span></div><div class="ths-insight"><p>量价观察：最新收盘价处于<strong>${positionText}</strong>，区间涨跌<strong>${Number.isFinite(rangeChange)?rangeChange.toFixed(2):'—'}%</strong>，${volumeText}。该模块仅展示公开行情统计，不构成投资建议。</p><span class="ths-badge">${toneKey === 'up' ? '上涨日' : '下跌日'}</span></div></section></div>`;
