@@ -3,7 +3,7 @@ import ast
 import json
 import math
 import time
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import akshare as ak
@@ -301,11 +301,70 @@ def get_market_history(code, days_back=260, limit=120):
     )
     if df is None or df.empty:
         return []
-    work = df.sort_values("date").tail(limit)
+    work = df.sort_values("date")
+    if limit:
+        work = work.tail(limit)
     rows = []
     for _, row in work.iterrows():
         rows.append({label: clean_value(row[col]) if col in row.index else None for label, col in MARKET_FIELDS.items()})
     return rows
+
+
+def aggregate_market_history(rows, period="W", limit=120):
+    if not rows:
+        return []
+    groups = []
+    current_key = None
+    current = []
+    for row in rows:
+        raw_date = row.get("日期")
+        try:
+            dt = datetime.strptime(str(raw_date), "%Y-%m-%d").date()
+        except Exception:
+            continue
+        if period == "M":
+            key = (dt.year, dt.month)
+        else:
+            iso = dt.isocalendar()
+            key = (iso.year, iso.week)
+        if current_key is None:
+            current_key = key
+        if key != current_key:
+            groups.append(current)
+            current = []
+            current_key = key
+        current.append(row)
+    if current:
+        groups.append(current)
+
+    result = []
+    for group in groups[-limit:]:
+        first, last = group[0], group[-1]
+        highs = [market_number(row, "最高价") for row in group]
+        lows = [market_number(row, "最低价") for row in group]
+        volumes = [market_number(row, "成交量") or 0 for row in group]
+        amounts = [market_number(row, "成交额") or 0 for row in group]
+        turnovers = [market_number(row, "换手率") or 0 for row in group]
+        result.append({
+            "日期": last.get("日期"),
+            "开盘价": first.get("开盘价"),
+            "最高价": max([value for value in highs if value is not None], default=None),
+            "最低价": min([value for value in lows if value is not None], default=None),
+            "收盘价": last.get("收盘价"),
+            "成交量": sum(volumes),
+            "成交额": sum(amounts),
+            "流动股本": last.get("流动股本"),
+            "换手率": sum(turnovers),
+        })
+    return result
+
+
+def get_period_market_histories(code):
+    long_history = get_market_history(code, days_back=4300, limit=None)
+    return {
+        "market_weekly_history": aggregate_market_history(long_history, "W", 120),
+        "market_monthly_history": aggregate_market_history(long_history, "M", 120),
+    }
 
 
 def get_market(code, days_back=14):
@@ -726,13 +785,18 @@ def fetch(limit=None, sleep_seconds=1.0):
             }
         time.sleep(sleep_seconds)
         try:
+            period_histories = get_period_market_histories(code)
             item["market_history"] = get_market_history(code)
+            item["market_weekly_history"] = period_histories["market_weekly_history"]
+            item["market_monthly_history"] = period_histories["market_monthly_history"]
             item["market"] = item["market_history"][-1] if item["market_history"] else {k: None for k in MARKET_FIELDS}
             item["market_indicators"] = build_market_indicators(item["market_history"])
         except Exception as exc:
             errors.append({"code": code, "stage": "market", "error": str(exc)})
             item["market"] = {k: None for k in MARKET_FIELDS}
             item["market_history"] = []
+            item["market_weekly_history"] = []
+            item["market_monthly_history"] = []
             item["market_indicators"] = build_market_indicators([])
         time.sleep(sleep_seconds)
         try:
