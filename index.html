@@ -24,7 +24,7 @@
 
   
 /* 公司基本信息左右栏平齐优化 */
-#overview .overview-layout{align-items:stretch}#overview .overview-main{height:100%;grid-template-rows:auto auto 1fr}#overview .news-panel{height:100%;display:grid;grid-template-rows:auto 1fr}.overview-extra-card{display:grid;gap:12px;align-content:start}.overview-insight-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.overview-insight-item{min-height:74px;padding:10px 12px;border:1px solid #eef2f7;background:#fff;display:grid;gap:5px;align-content:start}.overview-insight-item span{color:#d91f11;font-size:12px;font-weight:700}.overview-insight-item p{margin:0;color:#202124;font-size:13px;line-height:1.55}@media(max-width:1023px){#overview .overview-main{grid-template-rows:auto}.overview-insight-list{grid-template-columns:1fr}}
+#overview .overview-layout{align-items:stretch}#overview .overview-main{height:100%;grid-template-rows:auto auto 1fr}#overview .news-panel{height:100%;display:grid;grid-template-rows:auto 1fr}.overview-extra-card{display:grid;gap:12px;align-content:start}.overview-research-list{display:grid;gap:8px}.overview-research-item{min-height:54px;padding:9px 10px;border:1px solid #eef2f7;background:#fff;display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start}.overview-research-item b{height:24px;border-radius:2px;background:#f7f9fc;color:#d91f11;display:grid;place-items:center;font-family:ui-monospace,'JetBrains Mono',monospace;font-size:12px}.overview-research-item span{color:#202124;font-size:13px;font-weight:700}.overview-research-item p{margin:3px 0 0;color:#475569;font-size:12px;line-height:1.55}@media(max-width:1023px){#overview .overview-main{grid-template-rows:auto}}
 </style>
 </head>
 <body>
@@ -80,8 +80,8 @@
             <p id="mainBusiness" class="business-text placeholder">—</p>
           </article>
           <article class="card overview-extra-card">
-            <div class="card-title-row"><div><p class="field-label">投资关注点</p><h3>经营质量与跟踪线索</h3></div><span>自动生成</span></div>
-            <div id="overviewExtra" class="overview-insight-list"></div>
+            <div class="card-title-row"><div><p class="field-label">研究备忘</p><h3>下一步尽调问题</h3></div><span>分析清单</span></div>
+            <div id="overviewExtra" class="overview-research-list"></div>
           </article>
         </div>
         <aside class="card news-panel">
@@ -583,47 +583,22 @@
   }
 
   function renderOverviewExtra(stock){
-    const financials = stock?.financials || {};
-    const balance = financials['资产负债表'] || {};
-    const income = financials['利润表'] || {};
-    const cash = financials['现金流量表'] || {};
-    const indicators = stock?.market_indicators || {};
-    const segments = parseBusinessSegments(stock?.company?.['主营业务构成']);
-    const debtRatio = ratio(balance['负债合计'], balance['资产总计']);
-    const netMargin = ratio(income['净利润'], income['营业收入']);
-    const ocfToProfit = ratio(cash['经营现金流净额'], income['净利润']);
-    const periodChange = Number(indicators.period_change_pct);
-    const position = Number(indicators.position_ratio);
-    const topShare = segments[0]?.share;
-    const concentrationText = Number.isFinite(topShare)
-      ? (topShare >= 60 ? `第一业务收入占比 ${topShare.toFixed(1)}%，业务集中度较高，后续重点看该赛道景气度和价格周期。` : `第一业务收入占比 ${topShare.toFixed(1)}%，收入来源相对分散，可继续观察第二增长曲线。`)
-      : '主营业务占比暂缺，建议优先补充收入结构口径，避免只看公司名称判断赛道。';
-    const cashText = Number.isFinite(ocfToProfit)
-      ? (ocfToProfit >= 1 ? `经营现金流/净利润为 ${ocfToProfit.toFixed(2)}x，利润现金含量较好。` : `经营现金流/净利润为 ${ocfToProfit.toFixed(2)}x，需关注利润转化为现金的效率。`)
-      : '经营现金流与净利润暂不可比，需结合下一期报表继续验证现金质量。';
-    const leverageText = Number.isFinite(debtRatio)
-      ? (debtRatio <= .4 ? `资产负债率 ${formatPercent(debtRatio)}，财务杠杆相对克制。` : debtRatio <= .65 ? `资产负债率 ${formatPercent(debtRatio)}，杠杆处于中等区间。` : `资产负债率 ${formatPercent(debtRatio)}，需留意债务压力和利息成本。`)
-      : '资产负债率暂缺，无法判断杠杆水平。';
-    const marginText = Number.isFinite(netMargin)
-      ? (netMargin >= .15 ? `净利率 ${formatPercent(netMargin)}，盈利质量具备一定缓冲。` : netMargin >= .05 ? `净利率 ${formatPercent(netMargin)}，盈利能力中等，需看规模扩张能否改善利润率。` : `净利率 ${formatPercent(netMargin)}，盈利缓冲偏薄，需关注费用率和毛利率变化。`)
-      : '净利率暂缺，需结合收入和利润数据补充盈利能力判断。';
-    const priceText = Number.isFinite(periodChange)
-      ? (`近120日股价${periodChange >= 0 ? '上涨' : '回撤'} ${Math.abs(periodChange * 100).toFixed(2)}%，当前处于${indicators.position_label || '区间位置未知'}。`)
-      : '近120日行情动量暂不可比。';
-    const trackText = Number.isFinite(position)
-      ? (position >= .7 ? '位置偏高时不宜只追涨，重点跟踪业绩是否兑现估值预期。' : position <= .3 ? '位置偏低时重点区分估值修复机会和基本面恶化风险。' : '区间中部更适合结合财报趋势和行业景气度等待方向确认。')
-      : '行情位置不足以形成判断，优先补齐行情数据。';
+    const company = stock?.company || {};
+    const segments = parseBusinessSegments(company['主营业务构成']);
+    const industry = dash(company['所属行业与细分赛道']);
+    const topSegment = segments[0]?.name || '核心产品';
+    const secondSegment = segments[1]?.name || '第二业务';
     const rows = [
-      ['业务集中度', concentrationText],
-      ['现金质量', cashText],
-      ['杠杆水平', leverageText],
-      ['盈利能力', marginText],
-      ['价格位置', priceText],
-      ['后续跟踪', trackText],
+      ['行业景气', `验证${industry}未来 2-3 年需求是否仍在扩张，重点看下游资本开支、国产替代进度和价格周期。`],
+      ['产品竞争', `拆分${topSegment}的技术壁垒、毛利率稳定性和竞品替代风险，避免只看收入规模。`],
+      ['增长来源', `确认增长主要来自新客户、新产品、涨价还是产能释放；如果依赖${secondSegment}，需单独跟踪放量节奏。`],
+      ['客户结构', '查看前五大客户集中度、单一大客户议价能力，以及是否存在项目制收入波动。'],
+      ['资本开支', '对比在建工程、固定资产和经营现金流，判断扩产是否会带来折旧压力或现金流压力。'],
+      ['验证触发', '后续重点跟踪季报收入增速、毛利率、合同订单、研发费用率和管理层指引是否同步改善。'],
     ];
     const target = document.getElementById('overviewExtra');
     if(!target) return;
-    target.innerHTML = rows.map(([label, value]) => `<div class="overview-insight-item"><span>${escapeHtml(label)}</span><p>${escapeHtml(value)}</p></div>`).join('');
+    target.innerHTML = rows.map(([label, value], index) => `<div class="overview-research-item"><b>${String(index + 1).padStart(2, '0')}</b><div><span>${escapeHtml(label)}</span><p>${escapeHtml(value)}</p></div></div>`).join('');
   }
   function renderTrend(trend){
     const result = trend || {};
