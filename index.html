@@ -358,13 +358,16 @@
     const layout = getKlineLayout(w,h);
     const priceHigh = Math.max(...rows.map(r=>r.high));
     const priceLow = Math.min(...rows.map(r=>r.low));
+    const ma5 = calcMA(rows,5), ma10 = calcMA(rows,10), ma20 = calcMA(rows,20), ma60 = calcMA(rows,60);
+    const maPrices = [ma5, ma10, ma20, ma60].flat().filter(Number.isFinite);
+    const axisHigh = Math.max(priceHigh, ...maPrices);
+    const axisLow = Math.min(priceLow, ...maPrices);
     const maxVolume = Math.max(...rows.map(r=>r.volume), 1);
-    const pricePad = Math.max((priceHigh - priceLow) * 0.06, priceHigh * 0.002, 0.01);
-    const hi = priceHigh + pricePad, lo = priceLow - pricePad;
+    const pricePad = Math.max((axisHigh - axisLow) * 0.06, axisHigh * 0.002, 0.01);
+    const hi = axisHigh + pricePad, lo = axisLow - pricePad;
     const yPrice = v => layout.top + (hi - v) / (hi - lo) * layout.kH;
     const xAt = i => layout.left + (rows.length === 1 ? .5 : i / (rows.length - 1)) * layout.plotW;
     drawCanvasGrid(ctx, layout, hi, lo, maxVolume);
-    const ma5 = calcMA(rows,5), ma10 = calcMA(rows,10), ma20 = calcMA(rows,20), ma60 = calcMA(rows,60);
     const bodyW = Math.max(1.4, Math.min(7, layout.plotW / rows.length * .48));
     rows.forEach((row, i) => {
       const x = xAt(i);
