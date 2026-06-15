@@ -570,7 +570,7 @@
     chart.innerHTML = `<div class="donut" style="background:conic-gradient(${gradient})"><div class="donut-center"><div><strong>${top.share.toFixed(1)}%</strong><span>第一业务</span></div></div></div><ul class="business-legend">${legend}</ul>`;
   }
   function renderNews(news){
-    const items = Array.isArray(news) && news.length ? news.slice(0, 8) : [];
+    const items = Array.isArray(news) && news.length ? news.slice(0, 10) : [];
     if(!items.length){
       document.getElementById('newsList').innerHTML = '<li class="placeholder">暂无相关新闻</li>';
       return;
