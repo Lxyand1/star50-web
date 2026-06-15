@@ -284,10 +284,14 @@
     if(!Number.isFinite(v)||!Number.isFinite(l)||!Number.isFinite(h)||h<=l) return 50;
     return Math.max(0, Math.min(100, 100 - ((v-l)/(h-l))*100));
   }
+  const KLINE_DISPLAY_COUNT = 120;
   function normalizeMarketHistory(market, history){
     const rows = Array.isArray(history) ? history.filter(item => item && item['日期']) : [];
-    if(rows.length) return rows.slice(-120);
+    if(rows.length) return rows;
     return market && market['日期'] ? [market] : [];
+  }
+  function visibleKlineRows(rows){
+    return Array.isArray(rows) ? rows.slice(-KLINE_DISPLAY_COUNT) : [];
   }
   function movingAverage(rows, period){
     return rows.map((row, index) => {
@@ -315,16 +319,17 @@
       turnover: row['换手率']
     })).filter(row => [row.open,row.high,row.low,row.close].every(Number.isFinite));
     if(!clean.length) return;
+    const visible = visibleKlineRows(clean);
     const draw = () => drawKlineCanvas(canvas, clean, state, tooltip);
     draw();
     canvas.onmousemove = event => {
       const rect = canvas.getBoundingClientRect();
       const layout = getKlineLayout(rect.width, rect.height);
       const x = event.clientX - rect.left;
-      const index = Math.max(0, Math.min(clean.length - 1, Math.round((x - layout.left) / layout.plotW * (clean.length - 1))));
+      const index = Math.max(0, Math.min(visible.length - 1, Math.round((x - layout.left) / layout.plotW * (visible.length - 1))));
       state.hoverIndex = index;
       draw();
-      showKlineTooltip(tooltip, clean[index], event.clientX - rect.left, event.clientY - rect.top, rect.width);
+      showKlineTooltip(tooltip, visible[index], event.clientX - rect.left, event.clientY - rect.top, rect.width);
     };
     canvas.onmouseleave = () => { state.hoverIndex = null; if(tooltip) tooltip.style.display = 'none'; draw(); };
     canvas._klineResizeDraw = draw;
@@ -356,20 +361,22 @@
     ctx.clearRect(0,0,w,h);
     ctx.fillStyle = '#fff'; ctx.fillRect(0,0,w,h);
     const layout = getKlineLayout(w,h);
-    const priceHigh = Math.max(...rows.map(r=>r.high));
-    const priceLow = Math.min(...rows.map(r=>r.low));
-    const ma5 = calcMA(rows,5), ma10 = calcMA(rows,10), ma20 = calcMA(rows,20), ma60 = calcMA(rows,60);
+    const visibleRows = visibleKlineRows(rows);
+    const displayStart = Math.max(0, rows.length - visibleRows.length);
+    const priceHigh = Math.max(...visibleRows.map(r=>r.high));
+    const priceLow = Math.min(...visibleRows.map(r=>r.low));
+    const ma5 = calcMA(rows,5).slice(displayStart), ma10 = calcMA(rows,10).slice(displayStart), ma20 = calcMA(rows,20).slice(displayStart), ma60 = calcMA(rows,60).slice(displayStart);
     const maPrices = [ma5, ma10, ma20, ma60].flat().filter(Number.isFinite);
     const axisHigh = Math.max(priceHigh, ...maPrices);
     const axisLow = Math.min(priceLow, ...maPrices);
-    const maxVolume = Math.max(...rows.map(r=>r.volume), 1);
+    const maxVolume = Math.max(...visibleRows.map(r=>r.volume), 1);
     const pricePad = Math.max((axisHigh - axisLow) * 0.06, axisHigh * 0.002, 0.01);
     const hi = axisHigh + pricePad, lo = axisLow - pricePad;
     const yPrice = v => layout.top + (hi - v) / (hi - lo) * layout.kH;
-    const xAt = i => layout.left + (rows.length === 1 ? .5 : i / (rows.length - 1)) * layout.plotW;
+    const xAt = i => layout.left + (visibleRows.length === 1 ? .5 : i / (visibleRows.length - 1)) * layout.plotW;
     drawCanvasGrid(ctx, layout, hi, lo, maxVolume);
-    const bodyW = Math.max(1.4, Math.min(7, layout.plotW / rows.length * .48));
-    rows.forEach((row, i) => {
+    const bodyW = Math.max(1.4, Math.min(7, layout.plotW / visibleRows.length * .48));
+    visibleRows.forEach((row, i) => {
       const x = xAt(i);
       const up = row.close >= row.open;
       ctx.strokeStyle = up ? '#e93022' : '#009b61';
@@ -382,12 +389,12 @@
       const volH = row.volume / maxVolume * layout.volH;
       ctx.fillRect(x - bodyW/2, h - layout.volBottom - volH, bodyW, volH);
     });
-    drawMALine(ctx, rows, ma5, xAt, yPrice, '#2f6feb');
-    drawMALine(ctx, rows, ma10, xAt, yPrice, '#f59e0b');
-    drawMALine(ctx, rows, ma20, xAt, yPrice, '#e85aa7');
-    drawMALine(ctx, rows, ma60, xAt, yPrice, '#17b8a6');
-    drawHighLowMarks(ctx, rows, xAt, yPrice, priceHigh, priceLow, layout);
-    if(state.hoverIndex !== null) drawCrosshair(ctx, rows, state.hoverIndex, xAt, yPrice, layout, w, h);
+    drawMALine(ctx, visibleRows, ma5, xAt, yPrice, '#2f6feb');
+    drawMALine(ctx, visibleRows, ma10, xAt, yPrice, '#f59e0b');
+    drawMALine(ctx, visibleRows, ma20, xAt, yPrice, '#e85aa7');
+    drawMALine(ctx, visibleRows, ma60, xAt, yPrice, '#17b8a6');
+    drawHighLowMarks(ctx, visibleRows, xAt, yPrice, priceHigh, priceLow, layout);
+    if(state.hoverIndex !== null) drawCrosshair(ctx, visibleRows, state.hoverIndex, xAt, yPrice, layout, w, h);
   }
   function drawCanvasGrid(ctx, layout, hi, lo, maxVolume){
     ctx.strokeStyle = '#edf1f6'; ctx.lineWidth = 1;
@@ -440,7 +447,7 @@
       week: normalizeMarketHistory({}, stock?.market_weekly_history || []).filter(row => ['开盘价','最高价','最低价','收盘价'].every(key => Number.isFinite(Number(row[key])))),
       month: normalizeMarketHistory({}, stock?.market_monthly_history || []).filter(row => ['开盘价','最高价','最低价','收盘价'].every(key => Number.isFinite(Number(row[key])))),
     };
-    const rows = periodRows.day;
+    const rows = visibleKlineRows(periodRows.day);
     if(!rows.length){
       visual.innerHTML = '<div class="placeholder">暂无可用于绘制K线图的行情数据</div>';
       return;
@@ -539,7 +546,7 @@
         };
         [5,10,20,60].forEach(updateMA);
         const note = document.getElementById('klineCanvasNote');
-        if(note) note.textContent = `${labels[period]} ${selectedRows.length}根 · 鼠标悬停查看开高低收`;
+        if(note) note.textContent = `${labels[period]} ${visibleKlineRows(selectedRows).length}根 · 鼠标悬停查看开高低收`;
         document.querySelectorAll('[data-k-period]').forEach(btn => btn.classList.toggle('active', btn.dataset.kPeriod === period));
       };
       document.querySelectorAll('[data-k-period]').forEach(btn => btn.onclick = () => drawPeriod(btn.dataset.kPeriod));

@@ -290,7 +290,7 @@ def get_recent_news(code, name, limit=10):
         })
     return news or fallback
 
-def get_market_history(code, days_back=260, limit=120):
+def get_market_history(code, days_back=420, limit=179):
     end = date.today()
     start = end - timedelta(days=days_back)
     df = ak.stock_zh_a_daily(
@@ -362,8 +362,8 @@ def aggregate_market_history(rows, period="W", limit=120):
 def get_period_market_histories(code):
     long_history = get_market_history(code, days_back=4300, limit=None)
     return {
-        "market_weekly_history": aggregate_market_history(long_history, "W", 120),
-        "market_monthly_history": aggregate_market_history(long_history, "M", 120),
+        "market_weekly_history": aggregate_market_history(long_history, "W", 179),
+        "market_monthly_history": aggregate_market_history(long_history, "M", 179),
     }
 
 
