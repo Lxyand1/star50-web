@@ -259,7 +259,7 @@ def get_financials(code):
 
 
 
-def get_recent_news(code, name, limit=5):
+def get_recent_news(code, name, limit=8):
     fallback = [{
         "标题": f"搜索{name}相关新闻",
         "链接": f"https://so.eastmoney.com/news/s?keyword={code}",
