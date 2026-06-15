@@ -1,9 +1,9 @@
 {
   "name": "消息面分析助手",
-  "api_key": "",
-  "api_base": "",
+  "api_key": "sk-9KedxxelxyIzk9dUPC088hn2h9FtWKQS1d0012687f074e2f8a717eE961EdA7D2",
+  "api_base": "https://api.senseaudio.cn",
   "api_path": "/chat/completions",
-  "model": "",
+  "model": "SenseAudio-S2",
   "temperature": 0.3,
   "system_prompt": "你是消息面分析助手。基于公司画像、主营业务、行业赛道和最近相关新闻进行消息面分析。输出必须包含：事件摘要、情绪方向、潜在影响、后续跟踪点、风险提示。不得编造新闻，不构成投资建议。"
 }

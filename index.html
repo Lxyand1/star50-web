@@ -577,6 +577,75 @@
     if(!target) return;
     target.innerHTML = rows.map(([label, value], index) => `<div class="overview-research-item"><b>${String(index + 1).padStart(2, '0')}</b><div><span>${escapeHtml(label)}</span><p>${escapeHtml(value)}</p></div></div>`).join('');
   }
+  const AI_CONFIG_FILES = {
+    technical: './data/technical_ai_config.json',
+    news: './data/news_ai_config.json',
+    fundamental: './data/fundamental_ai_config.json'
+  };
+  const AI_OUTPUT_IDS = {
+    technical: 'technicalAiOutput',
+    news: 'newsAiOutput',
+    fundamental: 'fundamentalAiOutput'
+  };
+  const AI_SCOPE_LABELS = {
+    technical: '技术面分析助手',
+    news: '消息面分析助手',
+    fundamental: '基本面分析助手'
+  };
+  const aiConfigCache = {};
+  let currentStock = null;
+  async function loadAiConfig(scope){
+    if(aiConfigCache[scope]) return aiConfigCache[scope];
+    const res = await fetch(AI_CONFIG_FILES[scope], {cache:'no-store'});
+    if(!res.ok) throw new Error(`无法加载${AI_SCOPE_LABELS[scope]}配置`);
+    const config = await res.json();
+    aiConfigCache[scope] = config;
+    return config;
+  }
+  function buildAiPayload(scope, stock){
+    if(scope === 'technical') return {code:stock.code,name:stock.name,market:stock.market,market_indicators:stock.market_indicators,market_history:visibleKlineRows(stock.market_history || []),market_weekly_history:visibleKlineRows(stock.market_weekly_history || []),market_monthly_history:visibleKlineRows(stock.market_monthly_history || [])};
+    if(scope === 'news') return {code:stock.code,name:stock.name,company:stock.company,news:stock.news || []};
+    return {code:stock.code,name:stock.name,company:stock.company,financials:stock.financials};
+  }
+  function aiMessages(config, scope, stock){
+    return [
+      {role:'system', content:config.system_prompt || `你是${AI_SCOPE_LABELS[scope]}。`},
+      {role:'user', content:`请基于以下JSON数据分析${stock.name || stock.code}，输出结构化中文结论、主要依据和风险提示。\n${JSON.stringify(buildAiPayload(scope, stock), null, 2)}`}
+    ];
+  }
+  async function runAiAssistant(scope){
+    const output = document.getElementById(AI_OUTPUT_IDS[scope]);
+    const button = document.querySelector(`[data-ai-run="${scope}"]`);
+    if(!output || !currentStock) return;
+    output.classList.remove('is-error');
+    output.textContent = `${AI_SCOPE_LABELS[scope]}正在生成...`;
+    if(button) button.disabled = true;
+    try{
+      const config = await loadAiConfig(scope);
+      if(!config.api_key || !config.api_base || !config.model) throw new Error(`${AI_SCOPE_LABELS[scope]}配置缺少 api_key、api_base 或 model`);
+      const endpoint = config.api_base.replace(/\/$/, '') + (config.api_path || '/chat/completions');
+      const res = await fetch(endpoint, {
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':`Bearer ${config.api_key}`},
+        body:JSON.stringify({model:config.model,temperature:config.temperature ?? 0.3,messages:aiMessages(config, scope, currentStock)})
+      });
+      if(!res.ok) throw new Error(`模型接口返回 ${res.status}`);
+      const data = await res.json();
+      output.textContent = data?.choices?.[0]?.message?.content || data?.output_text || JSON.stringify(data, null, 2);
+    }catch(err){
+      output.classList.add('is-error');
+      output.textContent = err.message || String(err);
+    }finally{
+      if(button) button.disabled = false;
+    }
+  }
+  document.querySelectorAll('[data-ai-run]').forEach(btn => btn.addEventListener('click', () => runAiAssistant(btn.dataset.aiRun)));
+  function resetAiOutputs(){
+    Object.entries(AI_OUTPUT_IDS).forEach(([scope,id]) => {
+      const el = document.getElementById(id);
+      if(el){ el.classList.remove('is-error'); el.textContent = `选择股票后，点击按钮调用${AI_SCOPE_LABELS[scope]}。`; }
+    });
+  }
   function renderStock(stock){
     if(!stock) return;
     const company = stock.company || {};
