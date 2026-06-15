@@ -41,13 +41,13 @@
         <div class="brand-mark">财</div>
         <div class="brand-title">
           <h1>科创50公司财务与行情数据</h1>
-          <p>公司基本信息 · 行情数据 · 三大财务报表 · 半年走势参考 · 短期走势参考</p>
+          <p>技术面分析 · 消息面分析 · 基本面分析 · 半年走势参考 · 短期走势参考</p>
         </div>
       </div>
       <nav class="nav" aria-label="页面导航">
-        <button type="button" data-page-target="overview" aria-selected="true">公司基本信息</button>
-        <button type="button" data-page-target="market" aria-selected="false">行情数据</button>
-        <button type="button" data-page-target="financials" aria-selected="false">三大财务报表</button>
+        <button type="button" data-page-target="market" aria-selected="true">技术面分析</button>
+        <button type="button" data-page-target="overview" aria-selected="false">消息面分析</button>
+        <button type="button" data-page-target="financials" aria-selected="false">基本面分析</button>
         <button type="button" data-page-target="trend" aria-selected="false">半年走势参考</button>
         <button type="button" data-page-target="shortTerm" aria-selected="false">短期走势参考</button>
       </nav>
@@ -63,11 +63,11 @@
       <div class="meta" id="dataMeta">数据源：AKShare。金额单位默认人民币元；行情为最近一个有数据的交易日。</div>
     </div>
 
-    <section class="page is-active" id="overview" data-page="overview" aria-labelledby="overview-title">
+    <section class="page" id="overview" data-page="overview" aria-labelledby="overview-title">
       <div class="page-head">
         <p class="eyebrow">SECTION 01</p>
-        <h2 id="overview-title">公司基本信息</h2>
-        <p>用于承载公司名称与代码、主营业务构成、所属行业与细分赛道。</p>
+        <h2 id="overview-title">消息面分析</h2>
+        <p>汇总公司画像、主营业务、行业赛道与最近相关新闻，观察信息变化对投资判断的影响。</p>
       </div>
       <div class="overview-layout">
         <div class="overview-main">
@@ -97,15 +97,15 @@
       </div>
     </section>
 
-    <section class="page" id="market" data-page="market" aria-labelledby="market-title">
-      <div class="page-head"><p class="eyebrow">SECTION 02</p><h2 id="market-title">行情数据</h2><p>展示当天或最近交易日行情数据，不进行实时更新。</p></div>
+    <section class="page is-active" id="market" data-page="market" aria-labelledby="market-title">
+      <div class="page-head"><p class="eyebrow">SECTION 02</p><h2 id="market-title">技术面分析</h2><p>展示最近交易日行情、K线、均线与成交量结构，不进行实时更新。</p></div>
       <div class="market-layout market-layout-terminal">
         <article class="market-visual" id="marketVisual" aria-label="行情统计图"></article>
       </div>
     </section>
 
     <section class="page" id="financials" data-page="financials" aria-labelledby="financials-title">
-      <div class="page-head"><p class="eyebrow">SECTION 03</p><h2 id="financials-title">三大财务报表</h2><p>从资产结构、盈利表现和现金流质量三个视角快速阅读公司财务。当前展示最新报告期：<span class="badge" id="reportDate">—</span></p></div>
+      <div class="page-head"><p class="eyebrow">SECTION 03</p><h2 id="financials-title">基本面分析</h2><p>从资产结构、盈利表现和现金流质量三个视角快速阅读公司基本面。当前展示最新报告期：<span class="badge" id="reportDate">—</span></p></div>
       <div class="financial-layout">
         <section class="financial-hero" aria-label="财务核心摘要">
           <div class="financial-hero-copy"><span class="short-term-chip">FINANCIAL SNAPSHOT</span><h3>财务核心摘要</h3><p>把三张报表的关键数字先提炼出来，再向下查看完整明细。</p></div>
@@ -122,7 +122,7 @@
     </section>
 
     <section class="page" id="trend" data-page="trend" aria-labelledby="trend-title">
-      <div class="page-head"><p class="eyebrow">SECTION 04</p><h2 id="trend-title">半年走势参考</h2><p>基于公司基本信息和最新三大财务报表生成趋势研判，展示结论、理由和风险提示。</p></div>
+      <div class="page-head"><p class="eyebrow">SECTION 04</p><h2 id="trend-title">半年走势参考</h2><p>基于消息面分析和基本面分析生成趋势研判，展示结论、理由和风险提示。</p></div>
       <div class="trend-hero">
         <article class="trend-card">
           <h3 class="trend-title" id="trendHeadline">—</h3>
@@ -140,7 +140,7 @@
         </article>
       </div>
       <div class="statement" style="margin-top:24px">
-        <div class="statement-title"><h3>AI研判理由</h3><span>来自基本信息与三大财务报表</span></div>
+        <div class="statement-title"><h3>AI研判理由</h3><span>来自消息面与基本面分析</span></div>
         <div class="card"><ul class="reason-list" id="trendReasons"></ul></div>
       </div>
       <p class="screen-note">说明：该部分为规则化AI辅助研判，只用于信息参考，不构成买卖建议；未纳入实时行情、估值、市值和宏观事件。</p>
@@ -211,7 +211,7 @@
     try{localStorage.setItem(storageKey,targetId)}catch(e){}
   }
   navButtons.forEach(b=>b.addEventListener('click',()=>setPage(b.dataset.pageTarget)));
-  try{setPage(localStorage.getItem(storageKey)||'overview')}catch(e){setPage('overview')}
+  try{setPage(localStorage.getItem(storageKey)||defaultPage)}catch(e){setPage(defaultPage)}
 
   function dash(v){return v===undefined||v===null||v==='' ? '—' : v}
   function formatNumber(v, label=''){
@@ -529,7 +529,7 @@
       ['区间涨跌', Number.isFinite(rangeChange)?rangeChange.toFixed(2)+'%':'—'], ['区间位置', positionText], ['开收涨跌', Number.isFinite(openClosePct)?openClosePct.toFixed(2)+'%':'—'], ['K线数量', rows.length + ' 日'],
       ['阶段均量', compactNumber(indicators.avg_volume)], ['统计起点', dash(indicators.period_start)], ['统计终点', dash(indicators.period_end)], ['最新日期', dash(indicators.latest_date || lastDate)]
     ];
-    visual.innerHTML = `<div class="market-visual-head"><div><span class="short-term-chip">THS STYLE MARKET</span><h3>行情数据</h3><p>参考同花顺个股行情页的信息层级，展示报价、日K、均线、成交量和核心行情指标。</p></div><span class="market-date-pill">${escapeHtml(firstDate)} → ${escapeHtml(lastDate)}</span></div><div class="ths-terminal"><section class="compact-quote-strip"><div class="compact-main-quote"><div class="compact-stock-line"><strong>${escapeHtml(name)}</strong><span>${escapeHtml(code)}</span></div><div class="compact-price-line ${tone}"><strong>${formatNumber(close)}</strong><span>${Number.isFinite(dayChange)?sign+formatNumber(dayChange):'—'}</span><span>${Number.isFinite(dayChangePct)?sign+dayChangePct.toFixed(2)+'%':'—'}</span></div></div><div class="compact-quote-grid"><div class="compact-quote-cell"><span>高</span><strong class="compact-red">${formatNumber(latest['最高价'])}</strong></div><div class="compact-quote-cell"><span>市值</span><strong>${compactNumber((Number(latest['流动股本'])||0)*close)}</strong></div><div class="compact-quote-cell"><span>量比</span><strong>${Number.isFinite(volumeRatio)?volumeRatio.toFixed(2):'—'}</strong></div><div class="compact-quote-cell"><span>低</span><strong class="compact-green">${formatNumber(latest['最低价'])}</strong></div><div class="compact-quote-cell"><span>流通</span><strong>${compactNumber(latest['流动股本'])}</strong></div><div class="compact-quote-cell"><span>换</span><strong>${formatNumber(turnover,'换手率')}</strong></div><div class="compact-quote-cell"><span>开</span><strong class="compact-red">${formatNumber(open)}</strong></div><div class="compact-quote-cell"><span>市盈</span><strong>${dash(stock?.financials?.['利润表']?.['基本每股收益'])==='—'?'—':(close/Number(stock.financials['利润表']['基本每股收益'])).toFixed(2)}</strong></div><div class="compact-quote-cell"><span>额</span><strong>${compactNumber(latest['成交额'])}</strong></div></div></section><section class="ths-chart-shell"><div class="ths-tabs"><div class="ths-tab-left"><button class="active" data-k-period="day">日K</button><button data-k-period="week">周K</button><button data-k-period="month">月K</button></div><div class="ths-tab-right"><span id="maTab5">MA5 —</span><span id="maTab10">MA10 —</span><span id="maTab20">MA20 —</span><span id="maTab60">MA60 —</span><span>VOL</span></div></div><div class="ths-chart canvas-chart"><div class="ths-legend"><b id="maLegend5" style="color:#2f6feb">MA5 —</b><b id="maLegend10" style="color:#f59e0b">MA10 —</b><b id="maLegend20" style="color:#e85aa7">MA20 —</b><b id="maLegend60" style="color:#17b8a6">MA60 —</b></div><canvas id="klineCanvas" class="kline-canvas" aria-label="专业K线图"></canvas><div id="klineCanvasTooltip" class="kline-tooltip"></div><span id="klineCanvasNote" class="canvas-chart-note">日K 120根 · 鼠标悬停查看开高低收</span></div><div class="ths-insight"><p>量价观察：最新收盘价处于<strong>${positionText}</strong>，区间涨跌<strong>${Number.isFinite(rangeChange)?rangeChange.toFixed(2):'—'}%</strong>，${volumeText}。该模块仅展示公开行情统计，不构成投资建议。</p><span class="ths-badge">${toneKey === 'up' ? '上涨日' : '下跌日'}</span></div></section></div>`;
+    visual.innerHTML = `<div class="market-visual-head"><div><span class="short-term-chip">TECHNICAL ANALYSIS</span><h3>技术面分析</h3><p>参考同花顺个股行情页的信息层级，展示报价、日K、均线、成交量和核心技术指标。</p></div><span class="market-date-pill">${escapeHtml(firstDate)} → ${escapeHtml(lastDate)}</span></div><div class="ths-terminal"><section class="compact-quote-strip"><div class="compact-main-quote"><div class="compact-stock-line"><strong>${escapeHtml(name)}</strong><span>${escapeHtml(code)}</span></div><div class="compact-price-line ${tone}"><strong>${formatNumber(close)}</strong><span>${Number.isFinite(dayChange)?sign+formatNumber(dayChange):'—'}</span><span>${Number.isFinite(dayChangePct)?sign+dayChangePct.toFixed(2)+'%':'—'}</span></div></div><div class="compact-quote-grid"><div class="compact-quote-cell"><span>高</span><strong class="compact-red">${formatNumber(latest['最高价'])}</strong></div><div class="compact-quote-cell"><span>市值</span><strong>${compactNumber((Number(latest['流动股本'])||0)*close)}</strong></div><div class="compact-quote-cell"><span>量比</span><strong>${Number.isFinite(volumeRatio)?volumeRatio.toFixed(2):'—'}</strong></div><div class="compact-quote-cell"><span>低</span><strong class="compact-green">${formatNumber(latest['最低价'])}</strong></div><div class="compact-quote-cell"><span>流通</span><strong>${compactNumber(latest['流动股本'])}</strong></div><div class="compact-quote-cell"><span>换</span><strong>${formatNumber(turnover,'换手率')}</strong></div><div class="compact-quote-cell"><span>开</span><strong class="compact-red">${formatNumber(open)}</strong></div><div class="compact-quote-cell"><span>市盈</span><strong>${dash(stock?.financials?.['利润表']?.['基本每股收益'])==='—'?'—':(close/Number(stock.financials['利润表']['基本每股收益'])).toFixed(2)}</strong></div><div class="compact-quote-cell"><span>额</span><strong>${compactNumber(latest['成交额'])}</strong></div></div></section><section class="ths-chart-shell"><div class="ths-tabs"><div class="ths-tab-left"><button class="active" data-k-period="day">日K</button><button data-k-period="week">周K</button><button data-k-period="month">月K</button></div><div class="ths-tab-right"><span id="maTab5">MA5 —</span><span id="maTab10">MA10 —</span><span id="maTab20">MA20 —</span><span id="maTab60">MA60 —</span><span>VOL</span></div></div><div class="ths-chart canvas-chart"><div class="ths-legend"><b id="maLegend5" style="color:#2f6feb">MA5 —</b><b id="maLegend10" style="color:#f59e0b">MA10 —</b><b id="maLegend20" style="color:#e85aa7">MA20 —</b><b id="maLegend60" style="color:#17b8a6">MA60 —</b></div><canvas id="klineCanvas" class="kline-canvas" aria-label="专业K线图"></canvas><div id="klineCanvasTooltip" class="kline-tooltip"></div><span id="klineCanvasNote" class="canvas-chart-note">日K 120根 · 鼠标悬停查看开高低收</span></div><div class="ths-insight"><p>量价观察：最新收盘价处于<strong>${positionText}</strong>，区间涨跌<strong>${Number.isFinite(rangeChange)?rangeChange.toFixed(2):'—'}%</strong>，${volumeText}。该模块仅展示公开行情统计，不构成投资建议。</p><span class="ths-badge">${toneKey === 'up' ? '上涨日' : '下跌日'}</span></div></section></div>`;
     requestAnimationFrame(() => {
       const labels = {day:'日K', week:'周K', month:'月K'};
       const drawPeriod = period => {
