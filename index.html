@@ -31,6 +31,9 @@
 
 /* 行情均线标签完整显示 */
 .ths-tab-right{flex:1;justify-content:flex-end;min-width:0}.ths-tab-right span{white-space:nowrap}.ths-chart.canvas-chart .ths-legend{left:8px;right:8px;top:8px;max-width:none;display:grid;grid-template-columns:repeat(4,max-content);justify-content:start;gap:10px;line-height:1.35;background:rgba(255,255,255,.92);padding:3px 6px;border:1px solid #eef2f7}.ths-chart.canvas-chart .ths-legend::before{content:none}.ths-chart.canvas-chart .ths-legend b{white-space:nowrap;font-weight:700;min-width:76px}@media(max-width:760px){.ths-chart.canvas-chart .ths-legend{grid-template-columns:repeat(2,max-content);gap:4px 10px}.ths-chart.canvas-chart .ths-legend b{min-width:72px}}
+
+/* 三类大模型分析助手 */
+.ai-assistant-panel{margin-top:12px;border:1px solid #d8e4f8;background:#fff;border-radius:2px;overflow:hidden}.ai-assistant-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-bottom:1px solid #e6ebf2;background:#fbfdff}.ai-assistant-head span{display:block;color:#687385;font-size:11px;font-family:ui-monospace,'JetBrains Mono',monospace}.ai-assistant-head h3{margin:2px 0 0;font-size:16px;line-height:1.2}.ai-assistant-head button{border:0;border-radius:2px;background:#d91f11;color:#fff;padding:6px 10px;font-size:13px;cursor:pointer}.ai-assistant-head button:disabled{background:#9aa5b1;cursor:not-allowed}.ai-assistant-output{min-height:96px;padding:12px;color:#202124;font-size:13px;line-height:1.7;white-space:pre-wrap;background:#fff}.ai-assistant-output.is-muted{color:#687385}.ai-assistant-output.is-error{color:#d91f11}
 </style>
 </head>
 <body>
@@ -41,15 +44,13 @@
         <div class="brand-mark">财</div>
         <div class="brand-title">
           <h1>科创50公司财务与行情数据</h1>
-          <p>技术面分析 · 消息面分析 · 基本面分析 · 半年走势参考 · 短期走势参考</p>
+          <p>技术面分析 · 消息面分析 · 基本面分析</p>
         </div>
       </div>
       <nav class="nav" aria-label="页面导航">
         <button type="button" data-page-target="market" aria-selected="true">技术面分析</button>
         <button type="button" data-page-target="overview" aria-selected="false">消息面分析</button>
         <button type="button" data-page-target="financials" aria-selected="false">基本面分析</button>
-        <button type="button" data-page-target="trend" aria-selected="false">半年走势参考</button>
-        <button type="button" data-page-target="shortTerm" aria-selected="false">短期走势参考</button>
       </nav>
     </div>
   </header>
@@ -95,12 +96,20 @@
           <ul class="news-list" id="newsList"></ul>
         </aside>
       </div>
+      <section class="ai-assistant-panel" data-ai-scope="news">
+        <div class="ai-assistant-head"><div><span>AI ASSISTANT</span><h3>消息面分析助手</h3></div><button type="button" data-ai-run="news">生成消息面分析</button></div>
+        <div class="ai-assistant-output" id="newsAiOutput">选择股票后，点击按钮调用消息面分析助手。</div>
+      </section>
     </section>
 
     <section class="page is-active" id="market" data-page="market" aria-labelledby="market-title">
       <div class="page-head"><p class="eyebrow">SECTION 02</p><h2 id="market-title">技术面分析</h2><p>展示最近交易日行情、K线、均线与成交量结构，不进行实时更新。</p></div>
       <div class="market-layout market-layout-terminal">
         <article class="market-visual" id="marketVisual" aria-label="行情统计图"></article>
+        <section class="ai-assistant-panel" data-ai-scope="technical">
+          <div class="ai-assistant-head"><div><span>AI ASSISTANT</span><h3>技术面分析助手</h3></div><button type="button" data-ai-run="technical">生成技术面分析</button></div>
+          <div class="ai-assistant-output" id="technicalAiOutput">选择股票后，点击按钮调用技术面分析助手。</div>
+        </section>
       </div>
     </section>
 
@@ -118,71 +127,13 @@
           <section class="statement"><div class="statement-title"><h3>现金流量表</h3><span>单位：元</span></div><div class="table-wrap"><table><thead><tr><th>项目</th><th>数值</th></tr></thead><tbody id="cashBody"></tbody></table></div></section>
         </div>
         <p class="screen-note">说明：财务数据来自公开接口，仅作信息展示，不构成投资建议。</p>
+        <section class="ai-assistant-panel" data-ai-scope="fundamental">
+          <div class="ai-assistant-head"><div><span>AI ASSISTANT</span><h3>基本面分析助手</h3></div><button type="button" data-ai-run="fundamental">生成基本面分析</button></div>
+          <div class="ai-assistant-output" id="fundamentalAiOutput">选择股票后，点击按钮调用基本面分析助手。</div>
+        </section>
       </div>
     </section>
 
-    <section class="page" id="trend" data-page="trend" aria-labelledby="trend-title">
-      <div class="page-head"><p class="eyebrow">SECTION 04</p><h2 id="trend-title">半年走势参考</h2><p>基于消息面分析和基本面分析生成趋势研判，展示结论、理由和风险提示。</p></div>
-      <div class="trend-hero">
-        <article class="trend-card">
-          <h3 class="trend-title" id="trendHeadline">—</h3>
-          <p class="trend-summary" id="trendSummary">—</p>
-          <div class="trend-metrics">
-            <div class="trend-metric"><span>方向</span><strong id="trendDirection">—</strong></div>
-            <div class="trend-metric"><span>置信度</span><strong id="trendConfidence">—</strong></div>
-            <div class="trend-metric"><span>依据报告期</span><strong id="trendReportDate">—</strong></div>
-          </div>
-          <p class="trend-method" id="trendMethod">—</p>
-        </article>
-        <article class="statement">
-          <div class="statement-title"><h3>风险提示</h3><span>非投资建议</span></div>
-          <div class="card"><ul class="reason-list risk-list" id="trendRisks"></ul></div>
-        </article>
-      </div>
-      <div class="statement" style="margin-top:24px">
-        <div class="statement-title"><h3>AI研判理由</h3><span>来自消息面与基本面分析</span></div>
-        <div class="card"><ul class="reason-list" id="trendReasons"></ul></div>
-      </div>
-      <p class="screen-note">说明：该部分为规则化AI辅助研判，只用于信息参考，不构成买卖建议；未纳入实时行情、估值、市值和宏观事件。</p>
-    </section>
-
-    <section class="page" id="shortTerm" data-page="shortTerm" aria-labelledby="short-term-title">
-      <div class="page-head"><p class="eyebrow">SECTION 05</p><h2 id="short-term-title">短期走势参考</h2><p>基于最近相关新闻进行短期新闻情绪研判，展示结论、理由和风险提示。</p></div>
-      <div class="short-term-layout">
-        <article class="short-term-hero">
-          <div class="short-term-topline">
-            <span class="short-term-chip">NEWS SIGNAL</span>
-            <span class="badge">仅作信息参考</span>
-          </div>
-          <div class="short-term-grid">
-            <div class="short-term-card">
-              <h3 class="trend-title" id="shortTermHeadline">—</h3>
-              <p class="trend-summary" id="shortTermSummary">—</p>
-              <div class="short-term-metrics">
-                <div class="short-term-metric"><span>方向</span><strong id="shortTermDirection">—</strong></div>
-                <div class="short-term-metric"><span>置信度</span><strong id="shortTermConfidence">—</strong></div>
-              </div>
-              <p class="short-term-method" id="shortTermMethod">—</p>
-            </div>
-            <aside class="short-term-score">
-              <span>新闻评分</span>
-              <strong id="shortTermScore">—</strong>
-            </aside>
-          </div>
-        </article>
-        <div class="short-term-panels">
-          <article class="short-term-panel">
-            <div class="statement-title"><h3>AI新闻分析理由</h3><span>来自最近相关新闻</span></div>
-            <div class="card"><ul class="reason-list short-term-reasons" id="shortTermReasons"></ul></div>
-          </article>
-          <article class="short-term-panel">
-            <div class="statement-title"><h3>风险提示</h3><span>新闻情绪不等于股价</span></div>
-            <div class="card"><ul class="reason-list risk-list short-term-risks" id="shortTermRisks"></ul></div>
-          </article>
-        </div>
-      </div>
-      <p class="screen-note">说明：该部分只分析最近相关新闻标题与摘要中的短期事件信号，不构成买卖建议。</p>
-    </section>
   </main>
 </div>
 
@@ -626,28 +577,6 @@
     if(!target) return;
     target.innerHTML = rows.map(([label, value], index) => `<div class="overview-research-item"><b>${String(index + 1).padStart(2, '0')}</b><div><span>${escapeHtml(label)}</span><p>${escapeHtml(value)}</p></div></div>`).join('');
   }
-  function renderTrend(trend){
-    const result = trend || {};
-    setText('trendHeadline', result['标题']);
-    setText('trendSummary', result['摘要']);
-    setText('trendDirection', result['方向']);
-    setText('trendConfidence', result['置信度']);
-    setText('trendReportDate', result['依据报告期']);
-    setText('trendMethod', result['生成方法']);
-    renderList('trendReasons', result['主要理由'], '暂无可用于研判的理由数据。');
-    renderList('trendRisks', result['风险提示'], '暂无风险提示数据。');
-  }
-  function renderShortTerm(shortTerm){
-    const result = shortTerm || {};
-    setText('shortTermHeadline', result['标题']);
-    setText('shortTermSummary', result['摘要']);
-    setText('shortTermDirection', result['方向']);
-    setText('shortTermConfidence', result['置信度']);
-    setText('shortTermScore', result['评分']);
-    setText('shortTermMethod', result['生成方法']);
-    renderList('shortTermReasons', result['主要理由'], '暂无可用于新闻研判的理由数据。');
-    renderList('shortTermRisks', result['风险提示'], '暂无风险提示数据。');
-  }
   function renderStock(stock){
     if(!stock) return;
     const company = stock.company || {};
@@ -661,8 +590,8 @@
     renderNews(stock.news || []);
     renderFinancials(financials);
     renderMarket(stock.market || {}, stock.market_history || [], stock);
-    renderTrend(stock.trend || {});
-    renderShortTerm(stock.short_term || {});
+    currentStock = stock;
+    resetAiOutputs();
   }
   function init(data){
     dataset = data || {stocks:[]};
@@ -670,7 +599,7 @@
     document.getElementById('dataMeta').innerHTML = `数据源：${dash(dataset.source)}；生成时间：${dash(dataset.generated_at)}；股票数量：${stocks.length}`;
     if(!stocks.length){
       select.innerHTML = '<option>暂无数据：请先运行采集脚本</option>';
-      renderFinancials({}); renderMarket({}); renderBusinessChart(null); renderOverviewExtra({}); renderNews([]); renderTrend({}); renderShortTerm({});
+      renderFinancials({}); renderMarket({}); renderBusinessChart(null); renderOverviewExtra({}); renderNews([]); currentStock = null; resetAiOutputs();
       return;
     }
     select.innerHTML = stocks.map((s,i)=>`<option value="${i}">${s.name || s.company?.['公司名称'] || s.code}（${s.code}）</option>`).join('');
