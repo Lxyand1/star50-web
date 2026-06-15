@@ -22,7 +22,10 @@
 /* 行情数据顶部极简报价栏 */
 .compact-quote-strip{display:inline-grid;grid-template-columns:220px auto;gap:22px;align-items:center;padding:10px 18px 10px 14px;border-right:1px solid #e6ebf2;border-bottom:1px solid #e6ebf2;background:#fff;max-width:max-content}.compact-main-quote{display:grid;gap:10px}.compact-stock-line{display:flex;align-items:baseline;gap:12px}.compact-stock-line strong{font-size:20px;line-height:1;font-weight:700;color:#202124}.compact-stock-line span{font-family:Arial,'Microsoft YaHei',sans-serif;font-size:16px;color:#475569}.compact-price-line{display:flex;align-items:baseline;gap:12px;font-family:Arial,'Microsoft YaHei',sans-serif}.compact-price-line strong{font-size:22px;line-height:1;font-weight:400}.compact-price-line span{font-size:16px}.compact-quote-grid{display:grid;grid-template-columns:repeat(3,126px);grid-template-rows:repeat(3,22px);column-gap:22px;row-gap:6px;justify-content:start}.compact-quote-cell{display:grid;grid-template-columns:34px 1fr;align-items:baseline;gap:8px;min-height:22px}.compact-quote-cell span{font-size:15px;color:#687385}.compact-quote-cell strong{font-size:15px;color:#202124;font-weight:700;text-align:right;white-space:nowrap}.compact-red{color:#e93022!important}.compact-green{color:#009b61!important}.compact-neutral{color:#202124!important}.market-layout-terminal .ths-terminal{grid-template-rows:auto 1fr}.market-layout-terminal .ths-chart.canvas-chart{height:calc(100vh - 150px);min-height:580px}.market-layout-terminal .ths-chart-shell{min-height:0}@media(max-width:1023px){.compact-quote-strip{display:grid;grid-template-columns:1fr;gap:12px;max-width:none;border-right:0}.compact-quote-grid{grid-template-columns:repeat(3,minmax(118px,1fr));grid-template-rows:repeat(3,24px)}.market-layout-terminal .ths-chart.canvas-chart{height:620px;min-height:520px}}@media(max-width:639px){.compact-quote-strip{padding:10px 12px}.compact-stock-line strong{font-size:18px}.compact-price-line strong{font-size:22px}.compact-quote-grid{grid-template-columns:repeat(3,minmax(112px,1fr));grid-template-rows:repeat(3,22px);overflow-x:auto}.compact-quote-cell{grid-template-columns:42px 1fr}.compact-quote-cell span,.compact-quote-cell strong{font-size:14px}.market-layout-terminal .ths-chart.canvas-chart{height:480px;min-height:420px}}
 
-  </style>
+  
+/* 公司基本信息左右栏平齐优化 */
+#overview .overview-layout{align-items:stretch}#overview .overview-main{height:100%;grid-template-rows:auto auto 1fr}#overview .news-panel{height:100%;display:grid;grid-template-rows:auto 1fr}.overview-extra-card{display:grid;gap:12px;align-content:start}.overview-extra-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;border-top:1px solid #eef2f7;border-left:1px solid #eef2f7}.overview-extra-item{min-height:42px;padding:7px 10px;border-right:1px solid #eef2f7;border-bottom:1px solid #eef2f7;background:#fff;display:grid;grid-template-columns:70px 1fr;gap:8px;align-items:center}.overview-extra-item span{color:#687385;font-size:12px}.overview-extra-item strong{font-family:Arial,'Microsoft YaHei',sans-serif;font-size:13px;font-weight:500;color:#202124;line-height:1.35;word-break:break-word}@media(max-width:1023px){#overview .overview-main{grid-template-rows:auto}.overview-extra-grid{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 <div class="app-shell">
@@ -75,6 +78,10 @@
             <div class="card-title-row"><div><p class="field-label">主营业务构成</p><h3>收入结构可视化</h3></div><span>按收入占比</span></div>
             <div id="businessChart" class="business-chart-wrap"></div>
             <p id="mainBusiness" class="business-text placeholder">—</p>
+          </article>
+          <article class="card overview-extra-card">
+            <div class="card-title-row"><div><p class="field-label">公司画像</p><h3>核心信息补充</h3></div><span>自动摘要</span></div>
+            <div id="overviewExtra" class="overview-extra-grid"></div>
           </article>
         </div>
         <aside class="card news-panel">
@@ -574,6 +581,33 @@
       return `<li><a href="${url}" target="_blank" rel="noopener noreferrer">${title}</a><p class="news-meta">${source} · ${time}</p>${summary}</li>`;
     }).join('');
   }
+
+  function renderOverviewExtra(stock){
+    const company = stock?.company || {};
+    const financials = stock?.financials || {};
+    const balance = financials['资产负债表'] || {};
+    const income = financials['利润表'] || {};
+    const cash = financials['现金流量表'] || {};
+    const market = stock?.market || {};
+    const indicators = stock?.market_indicators || {};
+    const debtRatio = ratio(balance['负债合计'], balance['资产总计']);
+    const ocfToProfit = ratio(cash['经营现金流净额'], income['净利润']);
+    const rows = [
+      ['细分赛道', company['所属行业与细分赛道']],
+      ['最新收盘', formatNumber(market['收盘价'])],
+      ['120日区间', `${formatNumber(indicators.period_low)} / ${formatNumber(indicators.period_high)}`],
+      ['区间位置', indicators.position_label],
+      ['营业收入', compactNumber(income['营业收入'])],
+      ['归母净利', compactNumber(income['归母净利润'])],
+      ['资产负债率', formatPercent(debtRatio)],
+      ['现金流/净利', Number.isFinite(ocfToProfit) ? ocfToProfit.toFixed(2) + 'x' : '—'],
+      ['报告期', financials['报告期']],
+      ['新闻条数', Array.isArray(stock?.news) ? stock.news.length + ' 条' : '—'],
+    ];
+    const target = document.getElementById('overviewExtra');
+    if(!target) return;
+    target.innerHTML = rows.map(([label, value]) => `<div class="overview-extra-item"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join('');
+  }
   function renderTrend(trend){
     const result = trend || {};
     setText('trendHeadline', result['标题']);
@@ -605,6 +639,7 @@
     renderBusinessChart(company['主营业务构成']);
     setText('industry', company['所属行业与细分赛道']);
     setText('fullName', company['公司全称'] || company['公司名称']);
+    renderOverviewExtra(stock);
     renderNews(stock.news || []);
     renderFinancials(financials);
     renderMarket(stock.market || {}, stock.market_history || [], stock);
@@ -617,7 +652,7 @@
     document.getElementById('dataMeta').innerHTML = `数据源：${dash(dataset.source)}；生成时间：${dash(dataset.generated_at)}；股票数量：${stocks.length}`;
     if(!stocks.length){
       select.innerHTML = '<option>暂无数据：请先运行采集脚本</option>';
-      renderFinancials({}); renderMarket({}); renderBusinessChart(null); renderNews([]); renderTrend({}); renderShortTerm({});
+      renderFinancials({}); renderMarket({}); renderBusinessChart(null); renderOverviewExtra({}); renderNews([]); renderTrend({}); renderShortTerm({});
       return;
     }
     select.innerHTML = stocks.map((s,i)=>`<option value="${i}">${s.name || s.company?.['公司名称'] || s.code}（${s.code}）</option>`).join('');
